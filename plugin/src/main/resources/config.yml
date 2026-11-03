@@ -1,0 +1,11 @@
+# Start P2P hosting when the server starts and print the invite code in the console.
+# Otherwise run /p2p invite when you want to invite friends.
+auto-start: false
+
+# Public STUN servers used only to learn this machine's public UDP address. Game traffic never goes through them.
+# Leave the list empty to use the built-in defaults.
+stun-servers: []
+
+# NOTE: friends reach the server through 127.0.0.1, so they all appear with the same IP.
+#  - In bukkit.yml set "connection-throttle: 0" (otherwise two friends joining within 4 seconds are refused).
+#  - Leave "server-ip" empty in server.properties.
