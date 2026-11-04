@@ -29,3 +29,11 @@ if [ -f "$J262" ]; then
   for c in $(jar tf "$J262" | grep -E "MultiplayerScope\.class$" | sed "s/.class$//;s#/#.#g"); do javap -p -constants -cp "$J262" "$c" >> "$OUT" 2>&1; done
   javap -p -cp "$J262" net.minecraft.client.server.IntegratedServer | grep publishServer >> "$OUT"
 fi
+# online-mode: where does the integrated server decide whether to authenticate players?
+echo "=== authentication probe" >> "$OUT"
+for J in $(find "$HOME/.gradle/caches/fabric-loom" "$HOME/.gradle/caches/neoformruntime/artifacts" -name '*.jar' -size +10M 2>/dev/null | grep -iE 'minecraft'); do
+  echo "--- $J" >> "$OUT"
+  for c in net.minecraft.client.server.IntegratedServer net.minecraft.server.MinecraftServer; do
+    javap -p -cp "$J" "$c" 2>/dev/null | grep -iE 'uthenticat|onlineMode' | sed "s/^/$c: /" >> "$OUT"
+  done
+done
