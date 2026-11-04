@@ -86,7 +86,7 @@ public final class HostScreen extends Screen {
         int bottom = this.height - 28;
         addRenderableWidget(Button.builder(Component.literal("Stop hosting"), b -> {
             P2PState.stopHosting();
-            this.minecraft.setScreenAndShow(parent);
+            dev.p2pmc.mod.Compat.show(this.minecraft, parent);
         }).bounds(this.width / 2 - 154, bottom, 150, 20).build());
         addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose())
                 .bounds(this.width / 2 + 4, bottom, 150, 20).build());
@@ -153,6 +153,6 @@ public final class HostScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.minecraft.setScreenAndShow(parent);
+        dev.p2pmc.mod.Compat.show(this.minecraft, parent);
     }
 }

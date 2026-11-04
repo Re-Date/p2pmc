@@ -68,6 +68,8 @@ jobs:
               tail -n 120 "variants/$name.log" > "variants/$name.tail"
             fi
           }
+          build MOD-fabric-26.1.2-client mod -p mod -Pminecraft_version=26.1.2 '-PmcRange=~26.1.2'
+          build MOD-fabric-26.2-client mod -p mod -Pminecraft_version=26.2 '-PmcRange=~26.2'
           build MOD-fabric-1.21.1-client fabric-legacy -p fabric-legacy -Pmc=1.21.1 '-PmcRange=~1.21.1'
           build MOD-fabric-1.21.4-client fabric-legacy -p fabric-legacy -Pmc=1.21.4 '-PmcRange=~1.21.4'
           NEO4="$(curl -fsS https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml | grep -oE '<version>21\.4\.[0-9]+</version>' | sed -E 's/<[^>]+>//g' | sort -t. -k3 -n | tail -1)"

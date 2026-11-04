@@ -24,7 +24,7 @@ public abstract class PauseScreenMixin extends Screen {
             return; // only worlds hosted by this client can be shared
         }
         this.addRenderableWidget(Button.builder(Component.literal("P2P: Invite friends"),
-                        b -> this.minecraft.setScreenAndShow(new HostScreen(this)))
+                        b -> dev.p2pmc.mod.Compat.show(this.minecraft, new HostScreen(this)))
                 .bounds(6, 6, 130, 20).build());
     }
 }
