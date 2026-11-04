@@ -22,3 +22,10 @@ jar tf "$JAR" | grep -E '^net/minecraft/client/gui/Gui(\$|\.)' | head -5 >> "$OU
 for c in net.minecraft.client.gui.Gui net.minecraft.client.Minecraft; do
   javap -p -cp "$JAR" "$c" 2>/dev/null | grep -E "\(net\.minecraft\.client\.gui\.screens\.Screen\)" | sed "s/^/$c: /" >> "$OUT"
 done
+# 26.2 changed publishServer: list the scope enum it takes
+J262="$HOME/.gradle/caches/fabric-loom/26.2/minecraft-client.jar"
+if [ -f "$J262" ]; then
+  echo "=== 26.2 scope enum" >> "$OUT"
+  for c in $(jar tf "$J262" | grep -E "MultiplayerScope\.class$" | sed "s/.class$//;s#/#.#g"); do javap -p -constants -cp "$J262" "$c" >> "$OUT" 2>&1; done
+  javap -p -cp "$J262" net.minecraft.client.server.IntegratedServer | grep publishServer >> "$OUT"
+fi
