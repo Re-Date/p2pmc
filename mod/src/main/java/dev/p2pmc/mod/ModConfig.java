@@ -3,6 +3,7 @@ package dev.p2pmc.mod;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
+import dev.p2pmc.net.DiscordWebhook;
 import dev.p2pmc.net.P2PConfig;
 
 import java.io.IOException;
@@ -34,6 +35,34 @@ public final class ModConfig {
      * so treat it like a password. Set to false to approve every friend by pasting his answer code.
      */
     public boolean autoAccept = true;
+
+    /**
+     * Discord announcement when hosting starts. The webhook URL is a secret (anyone with it can post in your channel).
+     * Anyone who can read the channel can also use the code, so post it in a private channel.
+     */
+    public Discord discord = new Discord();
+
+    public static final class Discord {
+        public boolean enabled = false;
+        /** https://discord.com/api/webhooks/ID/TOKEN (channel settings, Integrations, Webhooks). */
+        public String webhookUrl = "";
+        /** Sender name shown in Discord; empty uses the webhook's own name. */
+        public String username = "P2P Minecraft";
+        /** Fills {name} in the messages. */
+        public String serverName = "My Minecraft world";
+        /** Put in front of the message, e.g. @everyone or <@&ROLE_ID>. Empty: no ping. */
+        public String mention = "";
+        /** Placeholders: {name}, {code}. */
+        public String startMessage = DiscordWebhook.Settings.DEFAULT_START;
+        public boolean notifyStop = false;
+        public String stopMessage = DiscordWebhook.Settings.DEFAULT_STOP;
+    }
+
+    public DiscordWebhook.Settings discordSettings() {
+        Discord d = discord == null ? new Discord() : discord;
+        return new DiscordWebhook.Settings(d.enabled, d.webhookUrl, d.username, d.serverName, d.mention,
+                d.startMessage, d.notifyStop, d.stopMessage);
+    }
 
     public static ModConfig current() {
         return current;

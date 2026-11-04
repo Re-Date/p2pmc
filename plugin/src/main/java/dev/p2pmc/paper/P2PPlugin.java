@@ -1,5 +1,6 @@
 package dev.p2pmc.paper;
 
+import dev.p2pmc.net.DiscordWebhook;
 import dev.p2pmc.net.InviteException;
 import dev.p2pmc.net.P2PConfig;
 import dev.p2pmc.net.P2PHost;
@@ -38,7 +39,15 @@ public final class P2PPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        stopHost();
+        stopHost(true);
+    }
+
+    private DiscordWebhook.Settings discord() {
+        var c = getConfig();
+        return new DiscordWebhook.Settings(c.getBoolean("discord.enabled", false), c.getString("discord.webhook-url", ""),
+                c.getString("discord.username", "P2P Minecraft"), c.getString("discord.server-name", "My Minecraft server"),
+                c.getString("discord.mention", ""), c.getString("discord.message-start", DiscordWebhook.Settings.DEFAULT_START),
+                c.getBoolean("discord.notify-stop", false), c.getString("discord.message-stop", DiscordWebhook.Settings.DEFAULT_STOP));
     }
 
     @Override
@@ -48,11 +57,12 @@ public final class P2PPlugin extends JavaPlugin {
             case "invite" -> startHost(sender::sendMessage);
             case "accept" -> accept(sender, args);
             case "status" -> sender.sendMessage(status());
+            case "announce" -> announce(sender);
             case "stop" -> {
-                stopHost();
+                stopHost(false);
                 sender.sendMessage("P2P hosting stopped. Friends are disconnected.");
             }
-            default -> sender.sendMessage("Usage: /p2p invite | accept <answer code> | status | stop");
+            default -> sender.sendMessage("Usage: /p2p invite | accept <answer code> | status | announce | stop");
         }
         return true;
     }
@@ -91,6 +101,7 @@ public final class P2PPlugin extends JavaPlugin {
                     starting = false;
                 }
                 reply.accept(describeInvite(h));
+                DiscordWebhook.announceStart(discord(), h.offerCode());
             } catch (Exception e) {
                 h.close();
                 synchronized (lock) {
@@ -124,7 +135,23 @@ public final class P2PPlugin extends JavaPlugin {
         }
     }
 
-    private void stopHost() {
+    /** Posts the invite code to Discord again (needs discord.enabled in config.yml). */
+    private void announce(CommandSender sender) {
+        P2PHost h;
+        synchronized (lock) {
+            h = host;
+        }
+        if (h == null) {
+            sender.sendMessage("Hosting is not running. Use /p2p invite first.");
+        } else if (!discord().enabled()) {
+            sender.sendMessage("Discord is disabled: set discord.enabled: true and discord.webhook-url in config.yml, then restart.");
+        } else {
+            DiscordWebhook.announceStart(discord(), h.offerCode());
+            sender.sendMessage("Invite code sent to Discord.");
+        }
+    }
+
+    private void stopHost(boolean blocking) {
         P2PHost h;
         synchronized (lock) {
             h = host;
@@ -133,6 +160,7 @@ public final class P2PPlugin extends JavaPlugin {
         }
         if (h != null) {
             h.close();
+            DiscordWebhook.announceStop(discord(), blocking);
         }
     }
 

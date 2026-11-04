@@ -1,5 +1,6 @@
 package dev.p2pmc.mod;
 
+import dev.p2pmc.net.DiscordWebhook;
 import dev.p2pmc.net.P2PConfig;
 import dev.p2pmc.net.P2PHost;
 import dev.p2pmc.net.P2PJoin;
@@ -71,6 +72,7 @@ public final class P2PState {
                 h.start();
                 host = h;
                 hostMessage = "";
+                DiscordWebhook.announceStart(ModConfig.current().discordSettings(), h.offerCode());
             } catch (IOException | RuntimeException e) {
                 P2PMod.LOGGER.error("Could not start P2P hosting", e);
                 h.close();
@@ -87,6 +89,7 @@ public final class P2PState {
         hostMessage = "";
         if (h != null) {
             h.close();
+            DiscordWebhook.announceStop(ModConfig.current().discordSettings(), false);
         }
     }
 

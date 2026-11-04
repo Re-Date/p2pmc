@@ -26,6 +26,7 @@ jobs:
           java -cp out dev.p2pmc.crypto.CryptoSelfTest
           java -cp out dev.p2pmc.net.TransportSelfTest
           java -cp out dev.p2pmc.net.EndToEndSelfTest
+          java -cp out dev.p2pmc.net.DiscordSelfTest
 
       - name: Build Paper plugin
         run: gradle -p plugin build --no-daemon
@@ -37,6 +38,13 @@ jobs:
           set -o pipefail
           gradle -p mod build --no-daemon --stacktrace 2>&1 | tee mod-build.log
 
+      - name: Build NeoForge mod (Minecraft 1.21.1)
+        id: neo
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          gradle -p neoforge build --no-daemon --stacktrace 2>&1 | tee neoforge-build.log
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -45,6 +53,7 @@ jobs:
           path: |
             plugin/build/libs/*.jar
             mod/build/libs/*.jar
+            neoforge/build/libs/*.jar
 
       - name: Publish jars to Releases
         if: github.ref == 'refs/heads/main'
@@ -56,21 +65,25 @@ jobs:
           PLUGIN="$(ls plugin/build/libs/*.jar 2>/dev/null | head -1 || true)"
           mkdir -p release
           ARGS=()
-          NOTES="Build $N. Which file is which:"$'\n'
+          NOTES="Build $N"$'\n'
           if [ -n "$MOD" ]; then
             cp "$MOD" "release/MOD-fabric-client-build$N.jar"
-            ARGS+=("release/MOD-fabric-client-build$N.jar#МОД для клиента (Fabric): в .minecraft/mods")
-            NOTES+="- MOD-fabric-client-build$N.jar: мод для игрока (Fabric, клиент), кладётся в .minecraft/mods"$'\n'
-          else
-            NOTES+="- МОД не собрался в этой сборке."$'\n'
+            ARGS+=("release/MOD-fabric-client-build$N.jar")
+            NOTES+="- MOD-fabric-client-build$N.jar: Fabric mod for players (.minecraft/mods)"$'\n'
+          fi
+          NEO="$(ls neoforge/build/libs/*.jar 2>/dev/null | grep -v -- '-sources' | head -1 || true)"
+          if [ -n "$NEO" ]; then
+            cp "$NEO" "release/MOD-neoforge-1.21.1-client-build$N.jar"
+            ARGS+=("release/MOD-neoforge-1.21.1-client-build$N.jar")
+            NOTES+="- MOD-neoforge-1.21.1-client-build$N.jar: NeoForge 21.1.x mod for players on Minecraft 1.21.1 (mods/)"$'\n'
           fi
           if [ -n "$PLUGIN" ]; then
             cp "$PLUGIN" "release/PLUGIN-paper-server-build$N.jar"
-            ARGS+=("release/PLUGIN-paper-server-build$N.jar#ПЛАГИН для сервера (Paper): в plugins/")
-            NOTES+="- PLUGIN-paper-server-build$N.jar: плагин для сервера Paper, кладётся в plugins/"$'\n'
+            ARGS+=("release/PLUGIN-paper-server-build$N.jar")
+            NOTES+="- PLUGIN-paper-server-build$N.jar: Paper server plugin (plugins/)"$'\n'
           fi
           if [ ${#ARGS[@]} -gt 0 ]; then
-            gh release create "build-$N" "${ARGS[@]}" --title "Build $N: мод и плагин" --notes "$NOTES"
+            gh release create "build-$N" "${ARGS[@]}" --title "Build $N" --notes "$NOTES"
           fi
 
       - name: Probe Minecraft API (debug aid)
@@ -78,12 +91,19 @@ jobs:
         continue-on-error: true
         run: bash scripts/probe.sh
 
+      - name: Probe NeoForge API (debug aid)
+        if: always()
+        continue-on-error: true
+        run: bash scripts/probe-neoforge.sh
+
       - name: Save mod build log to branch 'buildlog'
         if: always()
         run: |
           mkdir -p /tmp/logs
           if [ -f mod-build.log ]; then tail -n 400 mod-build.log > /tmp/logs/mod-build.log; fi
+          if [ -f neoforge-build.log ]; then tail -n 400 neoforge-build.log > /tmp/logs/neoforge-build.log; fi
           echo "mod=${{ steps.mod.outcome }} run=${{ github.run_number }}" > /tmp/logs/status.txt
+          echo "neoforge=${{ steps.neo.outcome }}" >> /tmp/logs/status.txt
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git checkout --orphan buildlog
@@ -94,5 +114,5 @@ jobs:
           git push -f origin buildlog
 
       - name: Fail if the mod did not build
-        if: steps.mod.outcome == 'failure'
+        if: steps.mod.outcome == 'failure' || steps.neo.outcome == 'failure'
         run: exit 1

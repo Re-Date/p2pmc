@@ -1,0 +1,28 @@
+plugins {
+    id 'java'
+    id 'net.neoforged.moddev' version '2.0.78'
+}
+
+version = project.mod_version
+group = 'dev.p2pmc'
+base { archivesName = 'p2pmc-neoforge' }
+
+neoForge {
+    version = project.neo_version
+    // client-only mod: no runs needed for the jar build
+}
+
+// The P2P engine is plain JDK Java in ../core and is compiled into the mod jar.
+sourceSets.main.java.srcDir '../core/src/main/java'
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand 'version': inputs.properties.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+    options.encoding = 'UTF-8'
+}
