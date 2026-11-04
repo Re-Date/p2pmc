@@ -23,7 +23,7 @@ public abstract class TitleScreenMixin extends Screen {
     private void p2pmc$addJoinButton(CallbackInfo ci) {
         P2PState.onTitleScreen(this.minecraft);
         this.addRenderableWidget(Button.builder(Component.literal("P2P: Join a friend"),
-                        b -> this.minecraft.setScreen(new JoinScreen(this)))
+                        b -> this.minecraft.setScreenAndShow(new JoinScreen(this)))
                 .bounds(6, 6, 130, 20).build());
     }
 }

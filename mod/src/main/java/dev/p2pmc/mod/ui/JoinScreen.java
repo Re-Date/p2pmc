@@ -146,6 +146,6 @@ public final class JoinScreen extends Screen {
         if (!gameConnectStarted) {
             P2PState.stopJoin();
         }
-        this.minecraft.setScreen(parent);
+        this.minecraft.setScreenAndShow(parent);
     }
 }
