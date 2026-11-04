@@ -1,0 +1,36 @@
+plugins {
+    // Remapping Loom for Minecraft versions that are still obfuscated (1.21.x), with Mojang names like the 26.x mod.
+    id 'net.fabricmc.fabric-loom-remap' version '1.19-SNAPSHOT'
+}
+
+version = "${project.mod_version}+mc${project.mc}"
+group = 'dev.p2pmc'
+base { archivesName = 'p2pmc-fabric' }
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.mc}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+}
+
+// Engine (plain JDK) and the UI/state classes shared with the NeoForge module; only the entrypoint and mixins are Fabric-specific.
+sourceSets.main.java {
+    srcDir '../core/src/main/java'
+    srcDir '../neoforge/src/main/java'
+    // the NeoForge entrypoint is replaced by the Fabric one in this module
+    exclude { it.file.path.contains('/neoforge/') && it.name == 'P2PMod.java' }
+}
+sourceSets.main.java.srcDir 'src/main/java'
+
+processResources {
+    inputs.property 'version', project.version
+    inputs.property 'mc_range', project.mcRange
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version, 'mc_range': project.mcRange
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+    options.encoding = 'UTF-8'
+}

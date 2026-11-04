@@ -3,7 +3,7 @@ plugins {
     id 'net.neoforged.moddev' version '2.0.78'
 }
 
-version = project.mod_version
+version = "${project.mod_version}+mc${project.minecraft_version}"
 group = 'dev.p2pmc'
 base { archivesName = 'p2pmc-neoforge' }
 
@@ -17,8 +17,9 @@ sourceSets.main.java.srcDir '../core/src/main/java'
 
 processResources {
     inputs.property 'version', project.version
+    inputs.property 'mc_range', project.mcRange
     filesMatching('META-INF/neoforge.mods.toml') {
-        expand 'version': inputs.properties.version
+        expand 'version': project.version, 'mc_range': project.mcRange
     }
 }
 

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "p2pmc",
+  "version": "${version}",
+  "name": "P2P Minecraft",
+  "description": "Host a world for friends over a direct encrypted peer-to-peer connection: no VPN, no public IP, no VPS.",
+  "authors": ["ReDate", "Claude"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["dev.p2pmc.mod.P2PMod"]
+  },
+  "mixins": [
+    {
+      "config": "p2pmc.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "${mc_range}",
+    "java": ">=21"
+  }
+}

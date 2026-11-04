@@ -4,7 +4,7 @@
   "version": "${version}",
   "name": "P2P Minecraft",
   "description": "Host a world for friends over a direct encrypted peer-to-peer connection: no VPN, no public IP, no VPS.",
-  "authors": ["P2P Minecraft"],
+  "authors": ["ReDate", "Claude"],
   "license": "MIT",
   "environment": "client",
   "entrypoints": {

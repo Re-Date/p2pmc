@@ -6,6 +6,7 @@ license = "MIT"
 modId = "p2pmc"
 version = "${version}"
 displayName = "P2P Minecraft"
+authors = "ReDate, Claude"
 description = "Host your world for friends without a public IP or VPS: direct encrypted peer-to-peer connection."
 
 [[dependencies.p2pmc]]
@@ -18,6 +19,6 @@ side = "CLIENT"
 [[dependencies.p2pmc]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.21.1,1.22)"
+versionRange = "${mc_range}"
 ordering = "NONE"
 side = "CLIENT"

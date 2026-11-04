@@ -45,6 +45,35 @@ jobs:
           set -o pipefail
           gradle -p neoforge build --no-daemon --stacktrace 2>&1 | tee neoforge-build.log
 
+      - name: Build other Minecraft versions (Fabric 1.21.1 / 1.21.4, NeoForge 1.21.4)
+        id: variants
+        continue-on-error: true
+        run: |
+          mkdir -p release variants
+          : > variants/status.txt
+          N="${{ github.run_number }}"
+          # keep the jars built above: the variant builds below clean their build folders
+          MAIN_MOD="$(ls mod/build/libs/*.jar 2>/dev/null | grep -v -- '-sources' | head -1 || true)"
+          MAIN_NEO="$(ls neoforge/build/libs/*.jar 2>/dev/null | grep -v -- '-sources' | head -1 || true)"
+          if [ -n "$MAIN_MOD" ]; then cp "$MAIN_MOD" "release/MOD-fabric-26.3-client-build$N.jar"; fi
+          if [ -n "$MAIN_NEO" ]; then cp "$MAIN_NEO" "release/MOD-neoforge-1.21.1-client-build$N.jar"; fi
+          build() { # name  jar-glob-dir  gradle-args...
+            local name="$1" dir="$2"; shift 2
+            if gradle "$@" clean build --no-daemon > "variants/$name.log" 2>&1; then
+              local jar; jar="$(ls $dir/build/libs/*.jar | grep -vE -- '-(sources|dev)\.jar$' | head -1)"
+              cp "$jar" "release/$name-build${{ github.run_number }}.jar"
+              echo "$name ok" >> variants/status.txt
+            else
+              echo "$name FAILED" >> variants/status.txt
+              tail -n 120 "variants/$name.log" > "variants/$name.tail"
+            fi
+          }
+          build MOD-fabric-1.21.1-client fabric-legacy -p fabric-legacy -Pmc=1.21.1 '-PmcRange=~1.21.1'
+          build MOD-fabric-1.21.4-client fabric-legacy -p fabric-legacy -Pmc=1.21.4 '-PmcRange=~1.21.4'
+          build MOD-neoforge-1.21.4-client neoforge -p neoforge -Pminecraft_version=1.21.4 '-Pneo_version=21.4.+' '-PmcRange=[1.21.4,1.21.5)'
+          cat variants/status.txt
+          ! grep -q FAILED variants/status.txt
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -61,27 +90,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           N="${{ github.run_number }}"
-          MOD="$(ls mod/build/libs/*.jar 2>/dev/null | grep -v -- '-sources' | head -1 || true)"
           PLUGIN="$(ls plugin/build/libs/*.jar 2>/dev/null | head -1 || true)"
           mkdir -p release
+          if [ -n "$PLUGIN" ]; then cp "$PLUGIN" "release/PLUGIN-paper-server-build$N.jar"; fi
           ARGS=()
           NOTES="Build $N"$'\n'
-          if [ -n "$MOD" ]; then
-            cp "$MOD" "release/MOD-fabric-client-build$N.jar"
-            ARGS+=("release/MOD-fabric-client-build$N.jar")
-            NOTES+="- MOD-fabric-client-build$N.jar: Fabric mod for players (.minecraft/mods)"$'\n'
-          fi
-          NEO="$(ls neoforge/build/libs/*.jar 2>/dev/null | grep -v -- '-sources' | head -1 || true)"
-          if [ -n "$NEO" ]; then
-            cp "$NEO" "release/MOD-neoforge-1.21.1-client-build$N.jar"
-            ARGS+=("release/MOD-neoforge-1.21.1-client-build$N.jar")
-            NOTES+="- MOD-neoforge-1.21.1-client-build$N.jar: NeoForge 21.1.x mod for players on Minecraft 1.21.1 (mods/)"$'\n'
-          fi
-          if [ -n "$PLUGIN" ]; then
-            cp "$PLUGIN" "release/PLUGIN-paper-server-build$N.jar"
-            ARGS+=("release/PLUGIN-paper-server-build$N.jar")
-            NOTES+="- PLUGIN-paper-server-build$N.jar: Paper server plugin (plugins/)"$'\n'
-          fi
+          for f in release/*.jar; do
+            [ -f "$f" ] || continue
+            ARGS+=("$f")
+            NOTES+="- $(basename "$f")"$'\n'
+          done
           if [ ${#ARGS[@]} -gt 0 ]; then
             gh release create "build-$N" "${ARGS[@]}" --title "Build $N" --notes "$NOTES"
           fi
@@ -104,6 +122,7 @@ jobs:
           if [ -f neoforge-build.log ]; then tail -n 400 neoforge-build.log > /tmp/logs/neoforge-build.log; fi
           echo "mod=${{ steps.mod.outcome }} run=${{ github.run_number }}" > /tmp/logs/status.txt
           echo "neoforge=${{ steps.neo.outcome }}" >> /tmp/logs/status.txt
+          if [ -f variants/status.txt ]; then cat variants/status.txt >> /tmp/logs/status.txt; cp variants/*.tail /tmp/logs/ 2>/dev/null || true; fi
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git checkout --orphan buildlog
@@ -114,5 +133,5 @@ jobs:
           git push -f origin buildlog
 
       - name: Fail if the mod did not build
-        if: steps.mod.outcome == 'failure' || steps.neo.outcome == 'failure'
+        if: steps.mod.outcome == 'failure' || steps.neo.outcome == 'failure' || steps.variants.outcome == 'failure'
         run: exit 1
