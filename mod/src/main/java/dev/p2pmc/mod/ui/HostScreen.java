@@ -61,7 +61,7 @@ public final class HostScreen extends Screen {
             y += 11;
         }
         y += 6;
-        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, "2) Paste the answer code your friend sends back:"));
+        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, "2) Only if auto-connect fails: friend's answer code:"));
         y += 14;
         answerBox = new EditBox(this.font, x, y, WIDTH - 70, 20, Component.literal("Answer code"));
         answerBox.setMaxLength(400);

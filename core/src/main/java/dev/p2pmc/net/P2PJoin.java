@@ -125,7 +125,7 @@ public final class P2PJoin implements Closeable {
                     session.offer(from, buf, off, len);
                 }
             });
-            set(State.WAITING_FOR_HOST, "Send your answer code to the host and wait...");
+            set(State.WAITING_FOR_HOST, "Connecting to the host... if nothing happens in a few seconds, send your answer code to the host.");
             session.start(config.joinerWaitMillis());
         } catch (InviteException e) {
             fail(e.getMessage());

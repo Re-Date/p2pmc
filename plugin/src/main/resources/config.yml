@@ -2,6 +2,10 @@
 # Otherwise run /p2p invite when you want to invite friends.
 auto-start: false
 
+# Friends who have the invite code connect by themselves (no /p2p accept needed). Anyone holding the code can join,
+# so treat it like a password. Set to false to approve each friend with /p2p accept <answer code>.
+auto-accept: true
+
 # Public STUN servers used only to learn this machine's public UDP address. Game traffic never goes through them.
 # Leave the list empty to use the built-in defaults.
 stun-servers: []

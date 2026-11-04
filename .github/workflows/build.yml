@@ -51,12 +51,26 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          FILES="$(ls plugin/build/libs/*.jar mod/build/libs/*.jar 2>/dev/null | grep -v -- '-sources' || true)"
-          echo "$FILES"
-          if [ -n "$FILES" ]; then
-            gh release create "build-${{ github.run_number }}" $FILES \
-              --title "Build ${{ github.run_number }}" \
-              --notes "Automated build (mod: ${{ steps.mod.outcome }})."
+          N="${{ github.run_number }}"
+          MOD="$(ls mod/build/libs/*.jar 2>/dev/null | grep -v -- '-sources' | head -1 || true)"
+          PLUGIN="$(ls plugin/build/libs/*.jar 2>/dev/null | head -1 || true)"
+          mkdir -p release
+          ARGS=()
+          NOTES="Build $N. Which file is which:"$'\n'
+          if [ -n "$MOD" ]; then
+            cp "$MOD" "release/MOD-fabric-client-build$N.jar"
+            ARGS+=("release/MOD-fabric-client-build$N.jar#МОД для клиента (Fabric): в .minecraft/mods")
+            NOTES+="- MOD-fabric-client-build$N.jar: мод для игрока (Fabric, клиент), кладётся в .minecraft/mods"$'\n'
+          else
+            NOTES+="- МОД не собрался в этой сборке."$'\n'
+          fi
+          if [ -n "$PLUGIN" ]; then
+            cp "$PLUGIN" "release/PLUGIN-paper-server-build$N.jar"
+            ARGS+=("release/PLUGIN-paper-server-build$N.jar#ПЛАГИН для сервера (Paper): в plugins/")
+            NOTES+="- PLUGIN-paper-server-build$N.jar: плагин для сервера Paper, кладётся в plugins/"$'\n'
+          fi
+          if [ ${#ARGS[@]} -gt 0 ]; then
+            gh release create "build-$N" "${ARGS[@]}" --title "Build $N: мод и плагин" --notes "$NOTES"
           fi
 
       - name: Probe Minecraft API (debug aid)

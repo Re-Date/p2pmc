@@ -53,7 +53,7 @@ public final class JoinScreen extends Screen {
                 .bounds(x, y, WIDTH, 20).build();
         addRenderableWidget(connectButton);
         y += 30;
-        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, "2) Send this answer code back to the host:"));
+        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, "2) Only if it does not connect: send this to the host:"));
         y += 14;
         answerBox = new EditBox(this.font, x, y, WIDTH - 70, 20, Component.literal("Answer code"));
         answerBox.setEditable(false);

@@ -22,11 +22,14 @@ final class PunchSession {
     static final int ROLE_HOST = 0;
     static final int ROLE_JOINER = 1;
     private static final int PROBE_LEN = 1 + 4 + 1 + 1 + 8;
+    /** A joiner's hello is a normal probe with its session id appended, so a host can accept it without an answer code. */
+    static final int HELLO_LEN = PROBE_LEN + Invite.SESSION_ID_LEN;
 
     private final UdpEndpoint endpoint;
     private final byte[] token;
     private final byte[] sessionId;
     private final byte[] tag;
+    private final byte[] hello;
     private final int myRole;
     private final List<InetSocketAddress> targets;
     private final ReliableChannel.Config channelConfig;
@@ -43,6 +46,7 @@ final class PunchSession {
         this.token = token;
         this.sessionId = sessionId;
         this.tag = Keys.tag(token, sessionId);
+        this.hello = myRole == ROLE_JOINER ? hello(token, sessionId) : null;
         this.myRole = myRole;
         this.targets = List.copyOf(targets);
         this.channelConfig = channelConfig;
@@ -79,7 +83,36 @@ final class PunchSession {
         byte[] probe = probe(myRole, false);
         for (InetSocketAddress target : targets) {
             endpoint.sendQuiet(target, probe);
+            if (hello != null) {
+                endpoint.sendQuiet(target, hello); // lets a host with auto-accept on create the session by itself
+            }
         }
+    }
+
+    /** Joiner hello: {@code 5 | tag | role | 0 | mac | sessionId}. Hosts that do not know hellos ignore it (wrong length). */
+    static byte[] hello(byte[] token, byte[] sessionId) {
+        byte[] p = new byte[HELLO_LEN];
+        p[0] = ReliableChannel.T_PUNCH;
+        System.arraycopy(Keys.tag(token, sessionId), 0, p, 1, 4);
+        p[5] = (byte) ROLE_JOINER;
+        p[6] = 0;
+        System.arraycopy(Keys.punchMac(token, sessionId, ROLE_JOINER, false), 0, p, 7, 8);
+        System.arraycopy(sessionId, 0, p, PROBE_LEN, Invite.SESSION_ID_LEN);
+        return p;
+    }
+
+    /** The session id inside a hello-shaped packet, or null if the packet has another shape. Not yet authenticated. */
+    static byte[] helloSessionId(byte[] b, int off, int len) {
+        if (len != HELLO_LEN || b[off] != ReliableChannel.T_PUNCH || b[off + 5] != ROLE_JOINER || b[off + 6] != 0) {
+            return null;
+        }
+        return Arrays.copyOfRange(b, off + PROBE_LEN, off + HELLO_LEN);
+    }
+
+    /** Checks the hello's MAC with the invite token: only holders of the invite code can make a host accept them. */
+    static boolean validHello(byte[] token, byte[] sessionId, byte[] b, int off) {
+        byte[] mac = Arrays.copyOfRange(b, off + 7, off + 15);
+        return MessageDigest.isEqual(mac, Keys.punchMac(token, sessionId, ROLE_JOINER, false));
     }
 
     /**
@@ -89,6 +122,12 @@ final class PunchSession {
      */
     boolean offer(InetSocketAddress from, byte[] buf, int off, int len) {
         if (done || !validProbe(1 - myRole, buf, off, len)) {
+            return false;
+        }
+        // The host fixes the path with the first probe it sees and acknowledges it on that very pair of addresses.
+        // The joiner therefore only trusts an acknowledgement: that guarantees both ends use the same pair even when
+        // several paths (LAN, public, loopback) work at once. Plain probes from the host just keep its pinhole open.
+        if (myRole == ROLE_JOINER && buf[off + 6] != 1) {
             return false;
         }
         synchronized (this) {

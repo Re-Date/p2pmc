@@ -29,6 +29,11 @@ public final class ModConfig {
     public int hostPunchSeconds = 30;
     /** How long a joining player waits for the host to accept their answer code. */
     public int joinWaitSeconds = 180;
+    /**
+     * Friends who have your invite code connect by themselves, no answer code needed. Anyone holding the code can join,
+     * so treat it like a password. Set to false to approve every friend by pasting his answer code.
+     */
+    public boolean autoAccept = true;
 
     public static ModConfig current() {
         return current;

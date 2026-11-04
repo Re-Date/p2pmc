@@ -80,8 +80,10 @@ public final class P2PPlugin extends JavaPlugin {
         }
         final P2PConfig finalConfig = config;
         final int port = getServer().getPort();
+        final boolean autoAccept = getConfig().getBoolean("auto-accept", true);
         Thread.ofVirtual().name("p2pmc-host-start").start(() -> {
             P2PHost h = new P2PHost(port, finalConfig);
+            h.setAutoAccept(autoAccept);
             try {
                 h.start();
                 synchronized (lock) {
@@ -160,7 +162,7 @@ public final class P2PPlugin extends JavaPlugin {
 
     private static String describeInvite(P2PHost h) {
         return "Invite code - send it to your friend:\n" + h.offerCode()
-                + "\nThey paste it in the mod (P2P: Join) and send you back an answer code. Then run: /p2p accept <answer code>\n"
+                + "\nFriends paste it in the mod (P2P: Join) and connect by themselves. Only if one gets stuck, he sends you an answer code: /p2p accept <answer code>\n"
                 + h.networkReport();
     }
 }

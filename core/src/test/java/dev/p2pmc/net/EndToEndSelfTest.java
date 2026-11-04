@@ -37,6 +37,9 @@ public final class EndToEndSelfTest {
             strangersCannotCreateSessions(cfg);
             hostNeverAccepts(new P2PConfig(List.of(stun.address()), 8_000, 2_000, 5_000, 1_500));
             disconnectsPropagate(cfg);
+            autoAcceptNeedsNoAnswerCode(cfg);
+            autoAcceptIsOffByDefault(new P2PConfig(List.of(stun.address()), 8_000, 30_000, 5_000, 1_500));
+            autoAcceptRejectsStrangers(cfg);
         }
         System.out.println("END-TO-END OK (" + checks + " checks)");
         System.exit(0);
@@ -127,8 +130,9 @@ public final class EndToEndSelfTest {
             expectInvite(() -> hostB.acceptAnswer(join.answerCode()), "answer made for host A is rejected by host B");
             expectInvite(() -> hostA.acceptAnswer("not a code"), "garbage answer rejected");
             expectInvite(() -> hostA.acceptAnswer(hostA.offerCode()), "invite pasted as answer rejected");
-            hostA.acceptAnswer(join.answerCode());
-            expectInvite(() -> hostA.acceptAnswer(join.answerCode()), "the same answer cannot be accepted twice");
+            P2PHost.Peer first = hostA.acceptAnswer(join.answerCode());
+            check(hostA.acceptAnswer(join.answerCode()) == first, "accepting the same answer twice returns the same friend, no duplicate");
+            check(hostA.peers().size() == 1, "a repeated answer does not create a second friend entry");
 
             P2PJoin bogus = new P2PJoin("AAAAA-BBBBB", cfg);
             bogus.start();
@@ -222,6 +226,88 @@ public final class EndToEndSelfTest {
     // ================================================================ fakes and helpers
 
     /** Echoes every byte back, like a trivially simple Minecraft server. */
+
+    // ================================================================ auto-accept
+
+    private static void autoAcceptNeedsNoAnswerCode(P2PConfig cfg) throws Exception {
+        try (EchoServer mc = new EchoServer(); P2PHost host = new P2PHost(mc.port(), cfg)) {
+            host.setAutoAccept(true);
+            host.start();
+            P2PJoin join = new P2PJoin(host.offerCode(), cfg);
+            join.start();
+            // note: the host never calls acceptAnswer
+            waitFor(() -> join.state() == P2PJoin.State.READY, 10_000,
+                    "joiner connected with auto-accept and no answer code (state " + join.state() + ": " + join.detail() + ")");
+            check(host.peers().size() == 1, "host created exactly one friend entry (not one per repeated hello): " + host.peers().size());
+            P2PHost.Peer peer = host.peers().get(0);
+            waitFor(() -> peer.state() == P2PHost.PeerState.CONNECTED, 5000, "auto-accepted friend shows as connected");
+            byte[] back = echo(join.localPort(), 300_000, 5);
+            check(Arrays.equals(sha(randomBytes(300_000, 5)), sha(back)), "300 KB echoed intact through an auto-accepted session");
+
+            // pasting the answer code anyway is harmless: it returns the same friend instead of failing
+            P2PHost.Peer again = host.acceptAnswer(join.answerCode());
+            check(again == peer, "manual accept of an already auto-accepted friend returns the same entry");
+            check(host.peers().size() == 1, "still one friend after the redundant manual accept");
+            join.close();
+        }
+    }
+
+    private static void autoAcceptIsOffByDefault(P2PConfig cfg) throws Exception {
+        try (EchoServer mc = new EchoServer(); P2PHost host = new P2PHost(mc.port(), cfg)) {
+            host.start(); // auto-accept NOT enabled
+            P2PJoin join = new P2PJoin(host.offerCode(), cfg);
+            join.start();
+            waitFor(() -> join.state() == P2PJoin.State.WAITING_FOR_HOST, 5000, "joiner ready");
+            Thread.sleep(2500);
+            check(join.state() == P2PJoin.State.WAITING_FOR_HOST, "without auto-accept the joiner keeps waiting: " + join.state());
+            check(host.peers().isEmpty(), "without auto-accept the host created no friend entry");
+            host.acceptAnswer(join.answerCode()); // the manual path still works
+            waitFor(() -> join.state() == P2PJoin.State.READY, 10_000, "manual accept still connects");
+            join.close();
+        }
+    }
+
+    private static void autoAcceptRejectsStrangers(P2PConfig cfg) throws Exception {
+        try (EchoServer mc = new EchoServer(); P2PHost host = new P2PHost(mc.port(), cfg)) {
+            host.setAutoAccept(true);
+            host.start();
+            Invite.Offer real = Invite.decodeOffer(host.offerCode());
+
+            // 1) someone who guessed the address but not the token: valid-looking hellos with a wrong MAC
+            byte[] wrongToken = new byte[Invite.TOKEN_LEN];
+            new Random(1).nextBytes(wrongToken);
+            P2PJoin impostor = new P2PJoin(Invite.encodeOffer(wrongToken, real.candidates()), cfg);
+            impostor.start();
+
+            // 2) raw junk shaped like a hello, and random garbage, sent straight at the host's UDP port
+            try (java.net.DatagramSocket raw = new java.net.DatagramSocket()) {
+                java.net.InetSocketAddress target = real.candidates().get(real.candidates().size() - 1);
+                Random rnd = new Random(2);
+                for (int i = 0; i < 200; i++) {
+                    byte[] junk = new byte[i % 2 == 0 ? PunchSession.HELLO_LEN : 1 + rnd.nextInt(60)];
+                    rnd.nextBytes(junk);
+                    junk[0] = ReliableChannel.T_PUNCH;
+                    if (junk.length == PunchSession.HELLO_LEN) {
+                        junk[5] = PunchSession.ROLE_JOINER;
+                        junk[6] = 0;
+                    }
+                    raw.send(new java.net.DatagramPacket(junk, junk.length, target));
+                }
+            }
+            Thread.sleep(3000);
+            check(host.peers().isEmpty(), "impostors and junk created no friend entries (peers=" + host.peers().size() + ")");
+            check(impostor.state() != P2PJoin.State.READY && impostor.state() != P2PJoin.State.CONNECTED,
+                    "impostor did not get a tunnel: " + impostor.state());
+
+            // the real friend still gets in afterwards (the host survived the abuse)
+            P2PJoin friend = new P2PJoin(host.offerCode(), cfg);
+            friend.start();
+            waitFor(() -> friend.state() == P2PJoin.State.READY, 10_000, "real friend connects after the abuse");
+            impostor.close();
+            friend.close();
+        }
+    }
+
     private static final class EchoServer implements AutoCloseable {
         final ServerSocket server;
         final AtomicInteger connections = new AtomicInteger();

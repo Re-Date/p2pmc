@@ -66,6 +66,7 @@ public final class P2PState {
         P2PConfig config = ModConfig.current().toP2PConfig();
         Thread.ofVirtual().name("p2pmc-host-start").start(() -> {
             P2PHost h = new P2PHost(port, config);
+            h.setAutoAccept(ModConfig.current().autoAccept);
             try {
                 h.start();
                 host = h;

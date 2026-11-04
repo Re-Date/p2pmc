@@ -65,7 +65,10 @@ public final class P2PHost implements Closeable {
     private final SecureRandom random = new SecureRandom();
     private final CopyOnWriteArrayList<PunchSession> pending = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<Peer> peers = new CopyOnWriteArrayList<>();
-    private final List<String> acceptedSessions = new ArrayList<>();
+    private final java.util.Map<String, Peer> bySession = new java.util.HashMap<>();
+    private volatile boolean autoAccept;
+    private long helloWindowStart;
+    private int helloCount;
 
     private UdpEndpoint endpoint;
     private byte[] token;
@@ -78,6 +81,15 @@ public final class P2PHost implements Closeable {
     public P2PHost(int minecraftPort, P2PConfig config) {
         this.minecraftPort = minecraftPort;
         this.config = config;
+    }
+
+    /**
+     * With auto-accept on, a friend who holds the invite code connects by himself: no answer code has to be pasted.
+     * Works whenever the friend's first packets can reach this PC (open or port-preserving NAT, forwarded port);
+     * otherwise the manual answer code still works. Anyone holding the invite code can join, so treat it like a password.
+     */
+    public void setAutoAccept(boolean enabled) {
+        this.autoAccept = enabled;
     }
 
     /** Blocking (up to the STUN timeout): binds the socket and builds the first invite. Call off the render thread. */
@@ -119,24 +131,30 @@ public final class P2PHost implements Closeable {
             throw new InviteException("Hosting is not running.");
         }
         Invite.Answer answer = Invite.decodeAnswer(token, answerCode);
-        String sessionKey = HexFormat.of().formatHex(answer.sessionId());
+        return acceptSession(answer.sessionId(), answer.candidates());
+    }
+
+    /** Starts connecting to one friend. A session that is already known (e.g. auto-accepted) just returns its peer. */
+    private Peer acceptSession(byte[] sessionId, List<InetSocketAddress> candidates) throws InviteException {
+        String sessionKey = HexFormat.of().formatHex(sessionId);
         Peer peer;
         synchronized (this) {
-            pending.removeIf(PunchSession::isDone);
-            if (acceptedSessions.contains(sessionKey)) {
-                throw new InviteException("This answer was already accepted.");
+            Peer existing = bySession.get(sessionKey);
+            if (existing != null) {
+                return existing;
             }
+            pending.removeIf(PunchSession::isDone);
             if (pending.size() >= MAX_PENDING) {
                 throw new InviteException("Too many connections in progress - wait a moment.");
             }
-            acceptedSessions.add(sessionKey);
             peer = new Peer(sessionKey.substring(0, 6));
+            bySession.put(sessionKey, peer);
             peers.add(peer);
         }
         final Peer p = peer;
-        PunchSession punch = new PunchSession(endpoint, token, answer.sessionId(), PunchSession.ROLE_HOST,
-                answer.candidates(), channelConfig,
-                link -> Thread.ofVirtual().name("p2p-host-" + p.id).start(() -> serve(p, answer.sessionId(), link)),
+        PunchSession punch = new PunchSession(endpoint, token, sessionId, PunchSession.ROLE_HOST,
+                candidates, channelConfig,
+                link -> Thread.ofVirtual().name("p2p-host-" + p.id).start(() -> serve(p, sessionId, link)),
                 () -> p.set(PeerState.FAILED, "Could not open a direct path (NAT too strict?). "
                         + "Use your tunnel service (playit.gg) for this friend."));
         pending.add(punch);
@@ -145,12 +163,46 @@ public final class P2PHost implements Closeable {
     }
 
     private void onUnknownPacket(InetSocketAddress from, byte[] buf, int off, int len) {
-        if (len > 0 && buf[off] == ReliableChannel.T_PUNCH) {
-            for (PunchSession s : pending) {
-                if (s.offer(from, buf, off, len)) {
-                    return;
-                }
+        if (len <= 0 || buf[off] != ReliableChannel.T_PUNCH) {
+            return;
+        }
+        for (PunchSession s : pending) {
+            if (s.offer(from, buf, off, len)) {
+                return;
             }
+        }
+        if (autoAccept && len == PunchSession.HELLO_LEN) {
+            autoAcceptHello(from, buf, off, len);
+        }
+    }
+
+    /** A friend announced himself with a MAC made from the invite token: accept without an answer code. */
+    private void autoAcceptHello(InetSocketAddress from, byte[] buf, int off, int len) {
+        byte[] sessionId = PunchSession.helloSessionId(buf, off, len);
+        if (sessionId == null) {
+            return;
+        }
+        synchronized (this) {
+            if (bySession.containsKey(HexFormat.of().formatHex(sessionId))) {
+                return; // the friend repeats his hello 4 times a second until connected
+            }
+            long now = System.nanoTime();
+            if (now - helloWindowStart > 1_000_000_000L) {
+                helloWindowStart = now;
+                helloCount = 0;
+            }
+            if (++helloCount > 50) {
+                return; // flood guard: at most 50 new hellos are verified per second
+            }
+        }
+        if (!PunchSession.validHello(token, sessionId, buf, off)) {
+            return;
+        }
+        try {
+            Peer peer = acceptSession(sessionId, List.of(from));
+            LOG.log(System.Logger.Level.INFO, "P2P friend {0} auto-accepted from {1}", peer.id, from);
+        } catch (InviteException ignored) {
+            // too many connections in progress: the friend keeps trying
         }
     }
 
