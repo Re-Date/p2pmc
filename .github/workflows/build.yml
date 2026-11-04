@@ -59,6 +59,11 @@ jobs:
               --notes "Automated build (mod: ${{ steps.mod.outcome }})."
           fi
 
+      - name: Probe Minecraft API (debug aid)
+        if: always()
+        continue-on-error: true
+        run: bash scripts/probe.sh
+
       - name: Save mod build log to branch 'buildlog'
         if: always()
         run: |
