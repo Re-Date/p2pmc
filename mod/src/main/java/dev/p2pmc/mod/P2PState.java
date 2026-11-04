@@ -50,7 +50,7 @@ public final class P2PState {
                 port = server.getPort();
             } else {
                 int free = HttpUtil.getAvailablePort();
-                if (!server.publishServer(null, false, free)) {
+                if (!Compat.publish(server, free)) {
                     hostMessage = "Minecraft could not open the world to the network.";
                     return;
                 }

@@ -13,6 +13,7 @@ show net.minecraft.client.gui.screens.PauseScreen 'init|createPauseMenu'
 show net.minecraft.client.gui.screens.TitleScreen 'init|createNormalMenuOptions'
 show net.minecraft.client.gui.screens.ConnectScreen 'startConnecting'
 show net.minecraft.client.server.IntegratedServer 'publishServer|isPublished|getPort'
+for c in $(jar tf "$JAR" | grep -E "MultiplayerScope\.class$" | sed "s/.class$//;s#/#.#g"); do echo "=== $c" >> "$OUT"; javap -p -constants -cp "$JAR" "$c" >> "$OUT" 2>&1; done
 show net.minecraft.util.HttpUtil 'getAvailablePort'
 show net.minecraft.client.KeyboardHandler 'lipboard'
 echo "=== classes mentioning Gui" >> "$OUT"

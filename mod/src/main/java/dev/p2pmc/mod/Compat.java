@@ -30,4 +30,45 @@ public final class Compat {
             throw new IllegalStateException(e);
         }
     }
+
+    /**
+     * Opens the world to the network on the given port. 26.1/26.3 take (GameType, cheats, port); 26.2 takes (MultiplayerScope, port).
+     */
+    public static boolean publish(net.minecraft.client.server.IntegratedServer server, int port) {
+        try {
+            for (Method m : server.getClass().getMethods()) {
+                if (!m.getName().equals("publishServer")) {
+                    continue;
+                }
+                Class<?>[] t = m.getParameterTypes();
+                if (t.length == 3 && t[1] == boolean.class && t[2] == int.class) {
+                    return (Boolean) m.invoke(server, null, false, port);
+                }
+                if (t.length == 2 && t[0].isEnum() && t[1] == int.class) {
+                    return (Boolean) m.invoke(server, lanScope(t[0]), port);
+                }
+            }
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+        throw new IllegalStateException("No supported IntegratedServer.publishServer method found");
+    }
+
+    /** The "open to LAN" constant of the 26.2 scope enum (not an online/realms one). */
+    private static Object lanScope(Class<?> type) {
+        Object[] all = type.getEnumConstants();
+        for (String wanted : new String[]{"LAN", "LOCAL"}) {
+            for (Object o : all) {
+                if (((Enum<?>) o).name().equals(wanted)) {
+                    return o;
+                }
+            }
+        }
+        for (Object o : all) {
+            if (((Enum<?>) o).name().contains("LAN")) {
+                return o;
+            }
+        }
+        throw new IllegalStateException("No LAN scope in " + java.util.Arrays.toString(all));
+    }
 }
