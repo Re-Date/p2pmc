@@ -12,6 +12,6 @@ public final class P2PMod implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         ModConfig.load(FabricLoader.getInstance().getConfigDir().resolve("p2pmc.json"));
-        LOGGER.info("P2P Minecraft ready: use 'P2P: Join a friend' on the title screen, or 'P2P: Invite friends' in a singleplayer world.");
+        LOGGER.info("P2P Minecraft ready: use 'P2P: Join' in the Multiplayer menu, or 'P2P: Invite friends' in a singleplayer world.");
     }
 }

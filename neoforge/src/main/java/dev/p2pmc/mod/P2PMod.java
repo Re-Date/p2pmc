@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.Mod;
@@ -27,10 +28,11 @@ public final class P2PMod {
 
     private static void onScreenInit(ScreenEvent.Init.Post event) {
         Minecraft mc = Minecraft.getInstance();
-        if (event.getScreen() instanceof TitleScreen title) {
+        if (event.getScreen() instanceof TitleScreen) {
             P2PState.onTitleScreen(mc);
-            event.addListener(Button.builder(Component.literal("P2P: Join a friend"),
-                    b -> mc.setScreen(new JoinScreen(title))).bounds(6, 6, 130, 20).build());
+        } else if (event.getScreen() instanceof JoinMultiplayerScreen multiplayer) {
+            event.addListener(Button.builder(Component.literal("P2P: Join"),
+                    b -> mc.setScreen(new JoinScreen(multiplayer))).bounds(6, 6, 70, 20).build());
         } else if (event.getScreen() instanceof PauseScreen pause && mc.getSingleplayerServer() != null) {
             event.addListener(Button.builder(Component.literal("P2P: Invite friends"),
                     b -> mc.setScreen(new HostScreen(pause))).bounds(6, 6, 130, 20).build());
