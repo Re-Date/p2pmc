@@ -75,6 +75,14 @@ jobs:
           NEO4="$(curl -fsS https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml | grep -oE '<version>21\.4\.[0-9]+</version>' | sed -E 's/<[^>]+>//g' | sort -t. -k3 -n | tail -1)"
           echo "NeoForge for 1.21.4: $NEO4" | tee -a variants/status.txt
           build MOD-neoforge-1.21.4-client neoforge -p neoforge -Pminecraft_version=1.21.4 "-Pneo_version=$NEO4" '-PmcRange=[1.21.4,1.21.5)'
+          MDG="$(curl -fsS https://maven.neoforged.net/releases/net/neoforged/moddev/net.neoforged.moddev.gradle.plugin/maven-metadata.xml | grep -oE '<release>[^<]+' | sed 's/<release>//')"
+          echo "ModDevGradle: $MDG" | tee -a variants/status.txt
+          for MC in 26.1.2 26.2 26.3; do
+            NEO26="$(curl -fsS https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml | grep -oE "<version>${MC//./\\.}\\.[^<]+</version>" | sed -E 's/<[^>]+>//g' | tail -1)"
+            echo "NeoForge for $MC: $NEO26" | tee -a variants/status.txt
+            case "$MC" in 26.1.2) RANGE='[26.1.2,26.2)';; 26.2) RANGE='[26.2,26.3)';; *) RANGE='[26.3,26.4)';; esac
+            build "MOD-neoforge-$MC-client" neoforge-26 -p neoforge-26 "-Pminecraft_version=$MC" "-Pneo_version=$NEO26" "-PmcRange=$RANGE" "-Pmdg_version=$MDG"
+          done
           cat variants/status.txt
           ! grep -q FAILED variants/status.txt
 

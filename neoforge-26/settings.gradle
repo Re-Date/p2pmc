@@ -1,0 +1,11 @@
+pluginManagement {
+    repositories {
+        maven { url = 'https://maven.neoforged.net/releases' }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    plugins {
+        id 'net.neoforged.moddev' version "${mdg_version}"
+    }
+}
+rootProject.name = 'p2pmc-neoforge-26'

@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+    id 'net.neoforged.moddev'
+}
+
+version = "${project.mod_version}+mc${project.minecraft_version}"
+group = 'dev.p2pmc'
+base { archivesName = 'p2pmc-neoforge' }
+
+neoForge {
+    version = project.neo_version
+}
+
+// Engine + UI/state classes are shared with the Fabric 26.x mod (same Mojang-named sources, with the 26.x compat helper).
+// Only the loader entrypoint differs, so the Fabric entrypoint and mixins are left out.
+sourceSets.main.java {
+    srcDir '../core/src/main/java'
+    srcDir '../mod/src/main/java'
+    srcDir 'src/main/java'
+    exclude { it.file.path.contains('/mod/src/main/java/dev/p2pmc/mod/mixin/') }
+    exclude { it.file.path.contains('/mod/src/main/java/') && it.name == 'P2PMod.java' }
+}
+
+processResources {
+    inputs.property 'version', project.version
+    inputs.property 'mc_range', project.mcRange
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand 'version': project.version, 'mc_range': project.mcRange
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+    options.encoding = 'UTF-8'
+}
