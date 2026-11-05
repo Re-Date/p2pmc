@@ -35,6 +35,12 @@ public final class ModConfig {
      * so treat it like a password. Set to false to approve every friend by pasting his answer code.
      */
     public boolean autoAccept = true;
+    /**
+     * true: friends must have a licensed (Mojang/Microsoft) account, like a normal server with online-mode=true.
+     * false: cracked/offline launchers can join too. Names are then not verified: anyone with your invite code can
+     * join under any name, so keep the code private (and use whitelist/ops carefully).
+     */
+    public boolean onlineMode = true;
 
     /**
      * Discord announcement when hosting starts. The webhook URL is a secret (anyone with it can post in your channel).

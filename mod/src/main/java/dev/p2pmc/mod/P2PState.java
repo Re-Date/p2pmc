@@ -62,6 +62,13 @@ public final class P2PState {
             return;
         }
 
+        try {
+            // licence check for joining players (vanilla default: true)
+            server.setUsesAuthentication(ModConfig.current().onlineMode);
+        } catch (RuntimeException e) {
+            P2PMod.LOGGER.warn("Could not change online-mode: {}", e.toString());
+        }
+
         hostStarting = true;
         hostMessage = "Checking your network...";
         P2PConfig config = ModConfig.current().toP2PConfig();
