@@ -29,6 +29,7 @@ jobs:
           java -cp out dev.p2pmc.net.DiscordSelfTest
           java -cp out dev.p2pmc.net.MessagesSelfTest
           java -cp out dev.p2pmc.net.UpnpSelfTest
+          java -cp out dev.p2pmc.net.QrSelfTest
 
       - name: Build Paper plugin
         run: gradle -p plugin build --no-daemon

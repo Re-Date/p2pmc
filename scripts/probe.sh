@@ -37,3 +37,8 @@ for J in $(find "$HOME/.gradle/caches/fabric-loom" "$HOME/.gradle/caches/neoform
     javap -p -cp "$J" "$c" 2>/dev/null | grep -iE 'uthenticat|onlineMode' | sed "s/^/$c: /" >> "$OUT"
   done
 done
+# 26.x screen rendering API (for QrScreen)
+if [ -f "$J262" ]; then
+  javap -p -cp "$J262" net.minecraft.client.gui.screens.Screen | grep -iE 'extract|render' >> "$OUT"
+  for c in $(jar tf "$J262" | grep -E 'gui/GuiGraphics[A-Za-z]*\.class$' | sed "s/.class$//;s#/#.#g"); do echo "--- $c" >> "$OUT"; javap -p -cp "$J262" "$c" | grep -E ' fill\(' >> "$OUT"; done
+fi

@@ -91,13 +91,25 @@ public final class HostScreen extends Screen {
         addRenderableWidget(Button.builder(Component.literal(Messages.t("ui.stop")), b -> {
             P2PState.stopHosting();
             this.minecraft.setScreen(parent);
-        }).bounds(x, bottom, 110, 20).build());
+        }).bounds(x, bottom, 74, 20).build());
+        addRenderableWidget(Button.builder(Component.literal(Messages.t("ui.showQr")), b -> showQr())
+                .bounds(x + 78, bottom, 58, 20).build());
         addRenderableWidget(Button.builder(licenceLabel(), this::toggleLicence)
                 .tooltip(Tooltip.create(Component.literal(Messages.t("ui.licenceTip"))))
-                .bounds(x + 114, bottom, 118, 20).build());
+                .bounds(x + 140, bottom, 120, 20).build());
         addRenderableWidget(Button.builder(Component.literal(Messages.t("ui.done")), b -> onClose())
-                .bounds(x + 236, bottom, 104, 20).build());
+                .bounds(x + 264, bottom, 76, 20).build());
         setInitialFocus(answerBox);
+    }
+
+    private void showQr() {
+        var h = P2PState.host();
+        String code = h == null ? "" : h.offerCode();
+        if (code == null || code.isEmpty()) {
+            setFeedback(Messages.t("ui.notReady"));
+            return;
+        }
+        this.minecraft.setScreen(new QrScreen(this, code));
     }
 
     private static Component licenceLabel() {

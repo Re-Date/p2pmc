@@ -116,8 +116,8 @@ public final class Messages {
         add("ui.stop", "Stop hosting", "Остановить");
         add("ui.friends", "Friends:", "Друзья:");
         add("ui.copied", "Invite code copied.", "Код-приглашение скопирован.");
-        add("ui.licenceOn", "Licence check: ON", "Проверка лицензии: ВКЛ");
-        add("ui.licenceOff", "Licence check: OFF", "Проверка лицензии: ВЫКЛ");
+        add("ui.licenceOn", "Licence: ON", "Лицензия: ВКЛ");
+        add("ui.licenceOff", "Licence: OFF", "Лицензия: ВЫКЛ");
         add("ui.licenceTip", "ON: only players with a licensed account can join. OFF: offline/cracked launchers can join too (names are not verified, keep the invite code private).",
                 "ВКЛ: зайти могут только игроки с лицензией. ВЫКЛ: можно и с пиратских лаунчеров (ники не проверяются, держите код в секрете).");
         add("ui.licenceNowOn", "Licence check ON: only licensed accounts can join (applies to new connections).",
