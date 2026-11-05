@@ -23,6 +23,7 @@ import java.util.List;
 public final class ModConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static volatile ModConfig current = new ModConfig();
+    private static volatile Path file;
 
     /** Public STUN servers used to discover your public address (they only see a UDP packet, never your game traffic). */
     public List<String> stunServers = new ArrayList<>(P2PConfig.defaults().stunServers());
@@ -81,7 +82,8 @@ public final class ModConfig {
                 d.handshakeMillis(), d.stunTimeoutMillis());
     }
 
-    public static void load(Path file) {
+    public static void load(Path path) {
+        file = path;
         ModConfig loaded = null;
         boolean write = false;
         if (Files.isRegularFile(file)) {
@@ -96,6 +98,14 @@ public final class ModConfig {
         current = loaded != null ? loaded : new ModConfig();
         if (write) {
             save(file, current);
+        }
+    }
+
+    /** Writes the current settings back (used when the licence-check button is toggled in the host screen). */
+    public static void saveCurrent() {
+        Path f = file;
+        if (f != null) {
+            save(f, current);
         }
     }
 

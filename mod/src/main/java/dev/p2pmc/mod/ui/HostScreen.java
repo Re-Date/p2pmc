@@ -1,10 +1,12 @@
 package dev.p2pmc.mod.ui;
 
+import dev.p2pmc.mod.ModConfig;
 import dev.p2pmc.mod.P2PState;
 import dev.p2pmc.net.InviteException;
 import dev.p2pmc.net.P2PHost;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -87,10 +89,32 @@ public final class HostScreen extends Screen {
         addRenderableWidget(Button.builder(Component.literal("Stop hosting"), b -> {
             P2PState.stopHosting();
             dev.p2pmc.mod.Compat.show(this.minecraft, parent);
-        }).bounds(this.width / 2 - 154, bottom, 150, 20).build());
+        }).bounds(x, bottom, 110, 20).build());
+        addRenderableWidget(Button.builder(licenceLabel(), this::toggleLicence)
+                .tooltip(Tooltip.create(Component.literal("ON: only players with a licensed account can join. "
+                        + "OFF: offline/cracked launchers can join too (names are not verified, keep the invite code private).")))
+                .bounds(x + 114, bottom, 118, 20).build());
         addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose())
-                .bounds(this.width / 2 + 4, bottom, 150, 20).build());
+                .bounds(x + 236, bottom, 104, 20).build());
         setInitialFocus(answerBox);
+    }
+
+    private static Component licenceLabel() {
+        return Component.literal(ModConfig.current().onlineMode ? "Licence check: ON" : "Licence check: OFF");
+    }
+
+    /** Switches the licence (online-mode) check for joining friends, immediately and for next time. */
+    private void toggleLicence(Button button) {
+        boolean on = !ModConfig.current().onlineMode;
+        ModConfig.current().onlineMode = on;
+        ModConfig.saveCurrent();
+        var server = this.minecraft.getSingleplayerServer();
+        if (server != null) {
+            server.setUsesAuthentication(on);
+        }
+        button.setMessage(licenceLabel());
+        setFeedback(on ? "Licence check ON: only licensed accounts can join (applies to new connections)."
+                : "Licence check OFF: offline launchers can join too. Keep your invite code private.");
     }
 
     private void acceptAnswer() {
