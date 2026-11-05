@@ -172,7 +172,7 @@ public final class HostScreen extends Screen {
             if (first + i < peers.size()) {
                 P2PHost.Peer p = peers.get(first + i);
                 long ping = p.pingMillis();
-                lines[i] = "- " + p.id() + ": " + p.detail() + (ping >= 0 && p.state() == P2PHost.PeerState.CONNECTED ? " (ping " + ping + " ms)" : "");
+                lines[i] = "- " + p.id() + ": " + p.detail() + (ping >= 0 && p.state() == P2PHost.PeerState.CONNECTED ? Messages.t("ui.ping", ping) : "");
             } else {
                 lines[i] = "";
             }

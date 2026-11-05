@@ -42,7 +42,7 @@ public final class JoinScreen extends Screen {
         int y = 24;
         addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, Messages.t("ui.joinHeader")));
         y += 24;
-        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, "1) Paste the invite code from the host:"));
+        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, Messages.t("ui.joinStep1")));
         y += 14;
         inviteBox = new EditBox(this.font, x, y, WIDTH - 70, 20, Component.literal(Messages.t("ui.inviteCode")));
         inviteBox.setMaxLength(400);
@@ -55,7 +55,7 @@ public final class JoinScreen extends Screen {
                 .bounds(x, y, WIDTH, 20).build();
         addRenderableWidget(connectButton);
         y += 30;
-        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, "2) Only if it does not connect: send this to the host:"));
+        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, Messages.t("ui.joinStep2")));
         y += 14;
         answerBox = new EditBox(this.font, x, y, WIDTH - 70, 20, Component.literal(Messages.t("ui.answerCode")));
         answerBox.setEditable(false);

@@ -136,6 +136,9 @@ public final class Messages {
         add("ui.publishFailed", "Minecraft could not open the world to the network.", "Minecraft не смог открыть мир для сети.");
         add("ui.publishError", "Could not open the world: {0}", "Не удалось открыть мир: {0}");
         add("ui.startFailed", "Could not start: {0}", "Не удалось запустить: {0}");
+        add("ui.joinStep1", "1) Paste the invite code from the host:", "1) Вставьте код-приглашение от хоста:");
+        add("ui.joinStep2", "2) Only if it does not connect: send this to the host:", "2) Только если не подключается: отправьте это хосту:");
+        add("ui.ping", " (ping {0} ms)", " (пинг {0} мс)");
         add("ui.showQr", "QR code", "QR-код");
         add("ui.qrTitle", "Scan with your phone to copy the invite code", "Отсканируйте телефоном, чтобы получить код-приглашение");
         add("ui.qrBack", "Back", "Назад");
