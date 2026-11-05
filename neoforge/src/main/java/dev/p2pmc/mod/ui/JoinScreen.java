@@ -1,5 +1,6 @@
 package dev.p2pmc.mod.ui;
 
+import dev.p2pmc.net.Messages;
 import dev.p2pmc.mod.P2PState;
 import dev.p2pmc.net.P2PJoin;
 import net.minecraft.client.gui.components.Button;
@@ -30,36 +31,37 @@ public final class JoinScreen extends Screen {
     private boolean gameConnectStarted;
 
     public JoinScreen(Screen parent) {
-        super(Component.literal("P2P join"));
+        super(Component.literal(Messages.t("ui.joinTitle")));
         this.parent = parent;
     }
 
     @Override
     protected void init() {
+        P2PState.refreshLanguage(this.minecraft);
         int x = (this.width - WIDTH) / 2;
         int y = 24;
-        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, "Join a friend over P2P (no VPN, no public IP)"));
+        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, Messages.t("ui.joinHeader")));
         y += 24;
         addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, "1) Paste the invite code from the host:"));
         y += 14;
-        inviteBox = new EditBox(this.font, x, y, WIDTH - 70, 20, Component.literal("Invite code"));
+        inviteBox = new EditBox(this.font, x, y, WIDTH - 70, 20, Component.literal(Messages.t("ui.inviteCode")));
         inviteBox.setMaxLength(400);
         addRenderableWidget(inviteBox);
-        addRenderableWidget(Button.builder(Component.literal("Paste"), b -> {
+        addRenderableWidget(Button.builder(Component.literal(Messages.t("ui.paste")), b -> {
             inviteBox.setValue(this.minecraft.keyboardHandler.getClipboard().trim());
         }).bounds(x + WIDTH - 66, y, 66, 20).build());
         y += 26;
-        connectButton = Button.builder(Component.literal("Connect"), b -> connect())
+        connectButton = Button.builder(Component.literal(Messages.t("ui.connect")), b -> connect())
                 .bounds(x, y, WIDTH, 20).build();
         addRenderableWidget(connectButton);
         y += 30;
         addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, "2) Only if it does not connect: send this to the host:"));
         y += 14;
-        answerBox = new EditBox(this.font, x, y, WIDTH - 70, 20, Component.literal("Answer code"));
+        answerBox = new EditBox(this.font, x, y, WIDTH - 70, 20, Component.literal(Messages.t("ui.answerCode")));
         answerBox.setEditable(false);
         answerBox.setMaxLength(400);
         addRenderableWidget(answerBox);
-        copyButton = Button.builder(Component.literal("Copy"), b -> {
+        copyButton = Button.builder(Component.literal(Messages.t("ui.copy")), b -> {
             P2PJoin j = P2PState.join();
             if (j != null && !j.answerCode().isEmpty()) {
                 this.minecraft.keyboardHandler.setClipboard(j.answerCode());
@@ -73,7 +75,7 @@ public final class JoinScreen extends Screen {
             addRenderableWidget(statusLines[i]);
             y += 11;
         }
-        addRenderableWidget(Button.builder(Component.literal("Cancel"), b -> onClose())
+        addRenderableWidget(Button.builder(Component.literal(Messages.t("ui.cancel")), b -> onClose())
                 .bounds(this.width / 2 - 75, this.height - 28, 150, 20).build());
         setInitialFocus(inviteBox);
     }
@@ -81,7 +83,7 @@ public final class JoinScreen extends Screen {
     private void connect() {
         String code = inviteBox.getValue().trim();
         if (code.isEmpty()) {
-            fill(List.of("Paste the invite code first."));
+            fill(List.of(Messages.t("ui.pasteFirst")));
             return;
         }
         joining = true;

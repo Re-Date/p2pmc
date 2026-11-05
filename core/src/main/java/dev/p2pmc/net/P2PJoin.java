@@ -93,22 +93,22 @@ public final class P2PJoin implements Closeable {
 
     private void run() {
         try {
-            set(State.PREPARING, "Reading the invite...");
+            set(State.PREPARING, Messages.t("join.reading"));
             Invite.Offer offer = Invite.decodeOffer(offerCode);
             endpoint = new UdpEndpoint(0);
 
-            set(State.PREPARING, "Checking your network...");
+            set(State.PREPARING, Messages.t("net.checking"));
             StunResolver.Discovery d = endpoint.stun().discover(config.stunServers(), config.stunTimeoutMillis());
             List<InetSocketAddress> mine = new ArrayList<>(d.mapped());
             mine.addAll(endpoint.lanCandidates());
             if (mine.isEmpty()) {
-                throw new IOException("No network connection found.");
+                throw new IOException(Messages.t("join.noNetwork"));
             }
             networkReport = d.mapped().isEmpty()
-                    ? "No public address found (STUN unreachable) - only a host on your own network can be reached."
+                    ? Messages.t("net.noPublic.join")
                     : d.symmetric()
-                    ? "Your router uses a strict NAT (symmetric / CGNAT): connecting may fail. Use the host's tunnel (playit.gg) address instead."
-                    : "Network looks friendly.";
+                    ? Messages.t("net.strict.join")
+                    : Messages.t("net.friendly.join");
 
             byte[] sessionId = new byte[Invite.SESSION_ID_LEN];
             new SecureRandom().nextBytes(sessionId);
@@ -117,20 +117,19 @@ public final class P2PJoin implements Closeable {
             PunchSession session = new PunchSession(endpoint, offer.token(), sessionId, PunchSession.ROLE_JOINER,
                     offer.candidates(), channelConfig,
                     link -> Thread.ofVirtual().name("p2p-join-link").start(() -> onLink(link, Keys.psk(offer.token(), sessionId))),
-                    () -> fail("The host did not accept the answer in time, or the direct path is blocked. "
-                            + "Ask the host to paste your answer code, or use the host's tunnel address."));
+                    () -> fail(Messages.t("join.timeout")));
             punch = session;
             endpoint.setUnknownHandler((from, buf, off, len) -> {
                 if (len > 0 && buf[off] == ReliableChannel.T_PUNCH) {
                     session.offer(from, buf, off, len);
                 }
             });
-            set(State.WAITING_FOR_HOST, "Connecting to the host... if nothing happens in a few seconds, send your answer code to the host.");
+            set(State.WAITING_FOR_HOST, Messages.t("join.waiting"));
             session.start(config.joinerWaitMillis());
         } catch (InviteException e) {
             fail(e.getMessage());
         } catch (IOException | RuntimeException e) {
-            fail("Could not start: " + e.getMessage());
+            fail(Messages.t("join.startFailed", e.getMessage()));
         }
     }
 
@@ -140,27 +139,27 @@ public final class P2PJoin implements Closeable {
             link.channel().close();
             return;
         }
-        set(State.HANDSHAKING, "Path open, securing the connection...");
+        set(State.HANDSHAKING, Messages.t("peer.securing"));
         try {
             SecureStream stream = SecureStream.connect(link.channel(), psk, config.handshakeMillis());
             ServerSocket server = new ServerSocket(0, 1, InetAddress.getByAddress(new byte[]{127, 0, 0, 1}));
             listener = server;
             localPort = server.getLocalPort();
-            set(State.READY, "Connected to the host - joining the game...");
+            set(State.READY, Messages.t("join.ready"));
             server.setSoTimeout(60_000);
             try (stream; Socket game = server.accept()) {
                 game.setTcpNoDelay(true);
                 server.close();
-                set(State.CONNECTED, "Connected");
+                set(State.CONNECTED, Messages.t("peer.connected"));
                 Bridge.run(game, stream);
             }
             if (state != State.FAILED) {
-                set(State.CLOSED, "Disconnected");
+                set(State.CLOSED, Messages.t("peer.disconnected"));
             }
         } catch (SocketTimeoutException e) {
-            fail("The game did not connect to the tunnel in time.");
+            fail(Messages.t("join.gameTimeout"));
         } catch (IOException e) {
-            fail(closed ? "Closed" : "Connection failed: " + e.getMessage());
+            fail(closed ? Messages.t("join.closed") : Messages.t("peer.failed", e.getMessage()));
         }
     }
 

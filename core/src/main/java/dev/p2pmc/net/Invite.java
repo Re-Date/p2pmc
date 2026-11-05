@@ -57,12 +57,12 @@ public final class Invite {
     public static Offer decodeOffer(String text) throws InviteException {
         byte[] raw = decode(text, KIND_OFFER, "invite");
         if (raw.length < 1 + TOKEN_LEN + 1 + 2) {
-            throw new InviteException("Invite code is too short - copy the whole code.");
+            throw new InviteException(Messages.t("inv.tooShort"));
         }
         byte[] body = Arrays.copyOf(raw, raw.length - 2);
         byte[] crc = Arrays.copyOfRange(raw, raw.length - 2, raw.length);
         if (!MessageDigest.isEqual(crc, Arrays.copyOf(sha256(body), 2))) {
-            throw new InviteException("Invite code is damaged (checksum mismatch) - copy it again.");
+            throw new InviteException(Messages.t("inv.checksum"));
         }
         byte[] token = Arrays.copyOfRange(body, 1, 1 + TOKEN_LEN);
         return new Offer(token, readCandidates(body, 1 + TOKEN_LEN));
@@ -85,12 +85,12 @@ public final class Invite {
     public static Answer decodeAnswer(byte[] token, String text) throws InviteException {
         byte[] raw = decode(text, KIND_ANSWER, "answer");
         if (raw.length < 1 + SESSION_ID_LEN + 1 + 8) {
-            throw new InviteException("Answer code is too short - copy the whole code.");
+            throw new InviteException(Messages.t("ans.tooShort"));
         }
         byte[] body = Arrays.copyOf(raw, raw.length - 8);
         byte[] mac = Arrays.copyOfRange(raw, raw.length - 8, raw.length);
         if (!MessageDigest.isEqual(mac, Keys.answerMac(token, body))) {
-            throw new InviteException("This answer does not match your current invite (or it is damaged).");
+            throw new InviteException(Messages.t("ans.mismatch"));
         }
         byte[] sessionId = Arrays.copyOfRange(body, 1, 1 + SESSION_ID_LEN);
         return new Answer(sessionId, readCandidates(body, 1 + SESSION_ID_LEN));
@@ -101,20 +101,20 @@ public final class Invite {
     private static byte[] decode(String text, int expectedKind, String what) throws InviteException {
         byte[] raw = unbase32(text);
         if (raw.length == 0) {
-            throw new InviteException("Paste the " + what + " code first.");
+            throw new InviteException(Messages.t("invite".equals(what) ? "code.pasteInvite" : "code.pasteAnswer"));
         }
         int kind = (raw[0] >> 4) & 0xF;
         int version = raw[0] & 0xF;
         if (kind != KIND_OFFER && kind != KIND_ANSWER) {
-            throw new InviteException("This is not a P2P code.");
+            throw new InviteException(Messages.t("code.notP2P"));
         }
         if (kind != expectedKind) {
             throw new InviteException(kind == KIND_ANSWER
-                    ? "That is an ANSWER code. Paste the host's INVITE code here instead."
-                    : "That is an INVITE code. Paste your friend's ANSWER code here instead.");
+                    ? Messages.t("code.isAnswer")
+                    : Messages.t("code.isInvite"));
         }
         if (version != VERSION) {
-            throw new InviteException("Code was made by an incompatible mod version.");
+            throw new InviteException(Messages.t("code.incompatible"));
         }
         return raw;
     }
@@ -141,7 +141,7 @@ public final class Invite {
     private static List<InetSocketAddress> readCandidates(byte[] body, int pos) throws InviteException {
         int n = body[pos++] & 0xFF;
         if (n > MAX_CANDIDATES || body.length != pos + n * 6) {
-            throw new InviteException("Code is damaged - copy it again.");
+            throw new InviteException(Messages.t("code.damaged"));
         }
         List<InetSocketAddress> list = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
@@ -149,11 +149,11 @@ public final class Invite {
                 byte[] ip = Arrays.copyOfRange(body, pos, pos + 4);
                 int port = ((body[pos + 4] & 0xFF) << 8) | (body[pos + 5] & 0xFF);
                 if (port == 0) {
-                    throw new InviteException("Code is damaged - copy it again.");
+                    throw new InviteException(Messages.t("code.damaged"));
                 }
                 list.add(new InetSocketAddress(InetAddress.getByAddress(ip), port));
             } catch (UnknownHostException e) {
-                throw new InviteException("Code is damaged - copy it again.");
+                throw new InviteException(Messages.t("code.damaged"));
             }
             pos += 6;
         }
@@ -201,7 +201,7 @@ public final class Invite {
             char c = raw == 'O' ? '0' : (raw == 'I' || raw == 'L') ? '1' : raw;
             int v = ALPHABET.indexOf(c);
             if (v < 0) {
-                throw new InviteException("The code contains an invalid character '" + raw + "' - copy it again.");
+                throw new InviteException(Messages.t("code.badChar", raw));
             }
             buffer = (buffer << 5) | v;
             bits += 5;

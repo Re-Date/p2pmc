@@ -27,6 +27,7 @@ public final class P2PPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        dev.p2pmc.net.Messages.setLanguage(getConfig().getString("language", "en"));
         String ip = getServer().getIp();
         if (ip != null && !ip.isBlank() && !ip.equals("0.0.0.0") && !ip.startsWith("127.")) {
             getLogger().warning("server-ip is set to '" + ip + "'. The tunnel connects to 127.0.0.1, so friends can only "
@@ -94,6 +95,7 @@ public final class P2PPlugin extends JavaPlugin {
         Thread.ofVirtual().name("p2pmc-host-start").start(() -> {
             P2PHost h = new P2PHost(port, finalConfig);
             h.setAutoAccept(autoAccept);
+            h.setUpnpEnabled(getConfig().getBoolean("upnp", true));
             try {
                 h.start();
                 synchronized (lock) {

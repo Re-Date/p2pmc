@@ -1,5 +1,6 @@
 package dev.p2pmc.mod;
 
+import dev.p2pmc.net.Messages;
 import dev.p2pmc.net.DiscordWebhook;
 import dev.p2pmc.net.P2PConfig;
 import dev.p2pmc.net.P2PHost;
@@ -25,6 +26,15 @@ public final class P2PState {
 
     // ------------------------------------------------------------------ hosting
 
+    /** Takes the language from the game's language setting (ru_ru: Russian, anything else: English). */
+    public static void refreshLanguage(Minecraft mc) {
+        try {
+            Messages.setLanguage(mc.getLanguageManager().getSelected());
+        } catch (RuntimeException e) {
+            // keep the previous language
+        }
+    }
+
     public static P2PHost host() {
         return host;
     }
@@ -36,12 +46,13 @@ public final class P2PState {
 
     /** Call on the game thread (screen init): publishes the world to the loopback/LAN port if needed, then starts the engine. */
     public static void startHostingIfNeeded(Minecraft mc) {
+        refreshLanguage(mc);
         if (host != null || hostStarting) {
             return;
         }
         IntegratedServer server = mc.getSingleplayerServer();
         if (server == null) {
-            hostMessage = "Open a singleplayer world first, then use this button from the pause menu.";
+            hostMessage = Messages.t("ui.openWorldFirst");
             return;
         }
         final int port;
@@ -51,14 +62,14 @@ public final class P2PState {
             } else {
                 int free = HttpUtil.getAvailablePort();
                 if (!Compat.publish(server, free)) {
-                    hostMessage = "Minecraft could not open the world to the network.";
+                    hostMessage = Messages.t("ui.publishFailed");
                     return;
                 }
                 port = free;
             }
         } catch (RuntimeException e) {
             P2PMod.LOGGER.error("Could not publish the world", e);
-            hostMessage = "Could not open the world: " + e.getMessage();
+            hostMessage = Messages.t("ui.publishError", e.getMessage());
             return;
         }
 
@@ -70,11 +81,12 @@ public final class P2PState {
         }
 
         hostStarting = true;
-        hostMessage = "Checking your network...";
+        hostMessage = Messages.t("net.checking");
         P2PConfig config = ModConfig.current().toP2PConfig();
         Thread.ofVirtual().name("p2pmc-host-start").start(() -> {
             P2PHost h = new P2PHost(port, config);
             h.setAutoAccept(ModConfig.current().autoAccept);
+            h.setUpnpEnabled(ModConfig.current().upnp);
             try {
                 h.start();
                 host = h;
@@ -83,7 +95,7 @@ public final class P2PState {
             } catch (IOException | RuntimeException e) {
                 P2PMod.LOGGER.error("Could not start P2P hosting", e);
                 h.close();
-                hostMessage = "Could not start: " + e.getMessage();
+                hostMessage = Messages.t("ui.startFailed", e.getMessage());
             } finally {
                 hostStarting = false;
             }

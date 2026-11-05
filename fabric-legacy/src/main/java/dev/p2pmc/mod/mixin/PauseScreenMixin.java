@@ -1,5 +1,6 @@
 package dev.p2pmc.mod.mixin;
 
+import dev.p2pmc.net.Messages;
 import dev.p2pmc.mod.ui.HostScreen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -23,7 +24,8 @@ public abstract class PauseScreenMixin extends Screen {
         if (this.minecraft.getSingleplayerServer() == null) {
             return; // only worlds hosted by this client can be shared
         }
-        this.addRenderableWidget(Button.builder(Component.literal("P2P: Invite friends"),
+        dev.p2pmc.mod.P2PState.refreshLanguage(this.minecraft);
+        this.addRenderableWidget(Button.builder(Component.literal(Messages.t("ui.inviteButton")),
                         b -> this.minecraft.setScreen(new HostScreen(this)))
                 .bounds(6, 6, 130, 20).build());
     }

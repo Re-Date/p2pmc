@@ -6,6 +6,12 @@ auto-start: false
 # so treat it like a password. Set to false to approve each friend with /p2p accept <answer code>.
 auto-accept: true
 
+# Ask the router (UPnP) to open the UDP port so friends can connect even behind a strict NAT. Harmless without UPnP.
+upnp: true
+
+# Language of messages shown to players/console: en or ru
+language: en
+
 # Discord announcement: "server is online + invite code". The webhook URL is a SECRET (anyone with it can post in the
 # channel) and the code works like a password, so use a private channel. Create it in Discord: channel settings,
 # Integrations, Webhooks, New Webhook, Copy Webhook URL. /p2p announce posts the code again.

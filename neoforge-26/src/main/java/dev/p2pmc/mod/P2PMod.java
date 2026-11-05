@@ -1,5 +1,6 @@
 package dev.p2pmc.mod;
 
+import dev.p2pmc.net.Messages;
 import dev.p2pmc.mod.ui.HostScreen;
 import dev.p2pmc.mod.ui.JoinScreen;
 import net.minecraft.client.Minecraft;
@@ -28,13 +29,14 @@ public final class P2PMod {
 
     private static void onScreenInit(ScreenEvent.Init.Post event) {
         Minecraft mc = Minecraft.getInstance();
+        P2PState.refreshLanguage(mc);
         if (event.getScreen() instanceof TitleScreen) {
             P2PState.onTitleScreen(mc);
         } else if (event.getScreen() instanceof JoinMultiplayerScreen multiplayer) {
-            event.addListener(Button.builder(Component.literal("P2P: Join"),
+            event.addListener(Button.builder(Component.literal(Messages.t("ui.joinButton")),
                     b -> Compat.show(mc, new JoinScreen(multiplayer))).bounds(6, 6, 70, 20).build());
         } else if (event.getScreen() instanceof PauseScreen pause && mc.getSingleplayerServer() != null) {
-            event.addListener(Button.builder(Component.literal("P2P: Invite friends"),
+            event.addListener(Button.builder(Component.literal(Messages.t("ui.inviteButton")),
                     b -> Compat.show(mc, new HostScreen(pause))).bounds(6, 6, 130, 20).build());
         }
     }

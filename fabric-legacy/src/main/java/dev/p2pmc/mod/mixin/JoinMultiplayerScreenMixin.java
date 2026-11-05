@@ -1,5 +1,6 @@
 package dev.p2pmc.mod.mixin;
 
+import dev.p2pmc.net.Messages;
 import dev.p2pmc.mod.ui.JoinScreen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -20,7 +21,8 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
 
     @Inject(method = "init", at = @At("TAIL"))
     private void p2pmc$addJoinButton(CallbackInfo ci) {
-        this.addRenderableWidget(Button.builder(Component.literal("P2P: Join"),
+        dev.p2pmc.mod.P2PState.refreshLanguage(this.minecraft);
+        this.addRenderableWidget(Button.builder(Component.literal(Messages.t("ui.joinButton")),
                         b -> this.minecraft.setScreen(new JoinScreen(this)))
                 .bounds(6, 6, 70, 20).build());
     }

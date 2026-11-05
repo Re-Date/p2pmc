@@ -27,6 +27,8 @@ jobs:
           java -cp out dev.p2pmc.net.TransportSelfTest
           java -cp out dev.p2pmc.net.EndToEndSelfTest
           java -cp out dev.p2pmc.net.DiscordSelfTest
+          java -cp out dev.p2pmc.net.MessagesSelfTest
+          java -cp out dev.p2pmc.net.UpnpSelfTest
 
       - name: Build Paper plugin
         run: gradle -p plugin build --no-daemon

@@ -42,6 +42,8 @@ public final class ModConfig {
      * join under any name, so keep the code private (and use whitelist/ops carefully).
      */
     public boolean onlineMode = true;
+    /** Ask the router (UPnP) to open the UDP port so friends can connect even behind a strict NAT. Harmless if the router has no UPnP. */
+    public boolean upnp = true;
 
     /**
      * Discord announcement when hosting starts. The webhook URL is a secret (anyone with it can post in your channel).

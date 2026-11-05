@@ -28,7 +28,7 @@ public final class P2PHost implements Closeable {
     public static final class Peer {
         private final String id;
         private volatile PeerState state = PeerState.PUNCHING;
-        private volatile String detail = "Opening a direct path to your friend...";
+        private volatile String detail = Messages.t("host.opening");
         private volatile ReliableChannel channel;
 
         Peer(String id) {
@@ -73,9 +73,15 @@ public final class P2PHost implements Closeable {
     private UdpEndpoint endpoint;
     private byte[] token;
     private volatile String offerCode = "";
-    private volatile String networkReport = "Checking your network...";
+    private volatile String networkReport = Messages.t("net.checking");
     private volatile boolean closed;
     private ScheduledFuture<?> refresher;
+
+    private volatile boolean upnpEnabled = true;
+    private Upnp upnp;
+    private int upnpPort = -1;
+    private String upnpIp;
+    private long upnpNextAttempt;
 
     /** @param minecraftPort the local (LAN-published) integrated server port */
     public P2PHost(int minecraftPort, P2PConfig config) {
@@ -90,6 +96,39 @@ public final class P2PHost implements Closeable {
      */
     public void setAutoAccept(boolean enabled) {
         this.autoAccept = enabled;
+    }
+
+    /** Ask the router (UPnP) to forward our UDP port, which lets friends connect even behind a strict NAT. On by default. */
+    public void setUpnpEnabled(boolean enabled) {
+        this.upnpEnabled = enabled;
+    }
+
+    /** Opens/renews the UPnP mapping when due. Best effort, never throws. */
+    private synchronized void ensureUpnp() {
+        long now = System.nanoTime();
+        if (!upnpEnabled || closed || now - upnpNextAttempt < 0) {
+            return;
+        }
+        if (upnp == null) {
+            upnp = Upnp.discover(2000);
+        }
+        if (upnp == null) {
+            upnpNextAttempt = now + 120_000_000_000L;
+            return;
+        }
+        int local = endpoint.localPort();
+        String lan = UdpEndpoint.lanAddress() == null ? null : UdpEndpoint.lanAddress().getHostAddress();
+        int mapped = lan == null ? -1 : upnp.mapUdp(local, local, lan, "P2P Minecraft", 3600);
+        if (mapped > 0) {
+            upnpPort = mapped;
+            upnpIp = upnp.externalIp();
+            upnpNextAttempt = now + 1_200_000_000_000L; // renew well before the 1 hour lease ends
+        } else {
+            upnp = null;
+            upnpPort = -1;
+            upnpIp = null;
+            upnpNextAttempt = now + 120_000_000_000L;
+        }
     }
 
     /** Blocking (up to the STUN timeout): binds the socket and builds the first invite. Call off the render thread. */
@@ -128,7 +167,7 @@ public final class P2PHost implements Closeable {
      */
     public Peer acceptAnswer(String answerCode) throws InviteException {
         if (closed || endpoint == null) {
-            throw new InviteException("Hosting is not running.");
+            throw new InviteException(Messages.t("host.notRunning"));
         }
         Invite.Answer answer = Invite.decodeAnswer(token, answerCode);
         return acceptSession(answer.sessionId(), answer.candidates());
@@ -145,7 +184,7 @@ public final class P2PHost implements Closeable {
             }
             pending.removeIf(PunchSession::isDone);
             if (pending.size() >= MAX_PENDING) {
-                throw new InviteException("Too many connections in progress - wait a moment.");
+                throw new InviteException(Messages.t("host.tooMany"));
             }
             peer = new Peer(sessionKey.substring(0, 6));
             bySession.put(sessionKey, peer);
@@ -155,8 +194,7 @@ public final class P2PHost implements Closeable {
         PunchSession punch = new PunchSession(endpoint, token, sessionId, PunchSession.ROLE_HOST,
                 candidates, channelConfig,
                 link -> Thread.ofVirtual().name("p2p-host-" + p.id).start(() -> serve(p, sessionId, link)),
-                () -> p.set(PeerState.FAILED, "Could not open a direct path (NAT too strict?). "
-                        + "Use your tunnel service (playit.gg) for this friend."));
+                () -> p.set(PeerState.FAILED, Messages.t("host.punchFailed")));
         pending.add(punch);
         punch.start(config.hostPunchMillis());
         return peer;
@@ -208,18 +246,18 @@ public final class P2PHost implements Closeable {
 
     private void serve(Peer peer, byte[] sessionId, Link link) {
         peer.channel = link.channel();
-        peer.set(PeerState.HANDSHAKING, "Path open, securing the connection...");
+        peer.set(PeerState.HANDSHAKING, Messages.t("peer.securing"));
         try (SecureStream stream = SecureStream.accept(link.channel(), Keys.psk(token, sessionId), config.handshakeMillis())) {
             Socket minecraft = new Socket();
             minecraft.connect(new InetSocketAddress(InetAddress.getByAddress(new byte[]{127, 0, 0, 1}), minecraftPort), 3000);
             minecraft.setTcpNoDelay(true);
-            peer.set(PeerState.CONNECTED, "Connected");
+            peer.set(PeerState.CONNECTED, Messages.t("peer.connected"));
             LOG.log(System.Logger.Level.INFO, "P2P peer {0} connected", peer.id);
             Bridge.run(minecraft, stream);
-            peer.set(PeerState.CLOSED, "Disconnected");
+            peer.set(PeerState.CLOSED, Messages.t("peer.disconnected"));
         } catch (IOException e) {
             if (peer.state != PeerState.CLOSED) {
-                peer.set(PeerState.FAILED, "Connection failed: " + e.getMessage());
+                peer.set(PeerState.FAILED, Messages.t("peer.failed", e.getMessage()));
             }
             LOG.log(System.Logger.Level.INFO, "P2P peer {0} failed: {1}", peer.id, e.toString());
         }
@@ -230,24 +268,42 @@ public final class P2PHost implements Closeable {
             return;
         }
         StunResolver.Discovery d = endpoint.stun().discover(config.stunServers(), config.stunTimeoutMillis());
-        List<InetSocketAddress> candidates = new ArrayList<>(d.mapped());
+        ensureUpnp();
+        java.util.LinkedHashSet<InetSocketAddress> candidates = new java.util.LinkedHashSet<>();
+        boolean viaUpnp = upnpPort > 0 && Upnp.isPublicIpv4(upnpIp);
+        if (viaUpnp) {
+            candidates.add(new InetSocketAddress(upnpIp, upnpPort));
+        }
+        candidates.addAll(d.mapped());
         candidates.addAll(endpoint.lanCandidates());
         if (!candidates.isEmpty()) {
-            offerCode = Invite.encodeOffer(token, candidates);
+            offerCode = Invite.encodeOffer(token, new ArrayList<>(candidates));
         }
-        if (d.mapped().isEmpty()) {
-            networkReport = "No public address found (STUN unreachable). Only friends on your own network can connect directly.";
-        } else if (d.symmetric()) {
-            networkReport = "Your router uses a strict NAT (symmetric / CGNAT). Direct connections will often fail - "
-                    + "use your tunnel service (playit.gg) as a fallback.";
+        boolean good = viaUpnp || (!d.mapped().isEmpty() && !d.symmetric());
+        String verdict;
+        if (viaUpnp || (!d.mapped().isEmpty() && !d.symmetric())) {
+            verdict = Messages.t("net.friendly.host");
+        } else if (d.mapped().isEmpty()) {
+            verdict = Messages.t("net.noPublic.host");
         } else {
-            networkReport = "Network looks friendly: direct connections should work.";
+            verdict = Messages.t("net.strict.host");
         }
+        if (viaUpnp) {
+            verdict += " " + Messages.t("net.upnp.ok", upnpPort);
+        } else if (!good && upnpEnabled) {
+            verdict += " " + Messages.t("net.upnp.none");
+        }
+        networkReport = verdict;
     }
 
     @Override
     public void close() {
         closed = true;
+        final Upnp u = upnp;
+        final int mappedPort = upnpPort;
+        if (u != null && mappedPort > 0) {
+            Thread.ofVirtual().name("p2p-upnp-unmap").start(() -> u.unmapUdp(mappedPort));
+        }
         if (refresher != null) {
             refresher.cancel(false);
         }

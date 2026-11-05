@@ -1,5 +1,6 @@
 package dev.p2pmc.mod.ui;
 
+import dev.p2pmc.net.Messages;
 import dev.p2pmc.mod.ModConfig;
 import dev.p2pmc.mod.P2PState;
 import dev.p2pmc.net.InviteException;
@@ -31,29 +32,30 @@ public final class HostScreen extends Screen {
     private String feedbackText = "";
 
     public HostScreen(Screen parent) {
-        super(Component.literal("P2P host"));
+        super(Component.literal(Messages.t("ui.hostTitle")));
         this.parent = parent;
     }
 
     @Override
     protected void init() {
+        P2PState.refreshLanguage(this.minecraft);
         P2PState.startHostingIfNeeded(this.minecraft);
 
         int x = (this.width - WIDTH) / 2;
         int y = 16;
-        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, "Invite friends (direct P2P - no VPN, no public IP)"));
+        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, Messages.t("ui.hostHeader")));
         y += 20;
-        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, "1) Send this invite code to your friend:"));
+        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, Messages.t("ui.step1")));
         y += 14;
-        offerBox = new EditBox(this.font, x, y, WIDTH - 70, 20, Component.literal("Invite code"));
+        offerBox = new EditBox(this.font, x, y, WIDTH - 70, 20, Component.literal(Messages.t("ui.inviteCode")));
         offerBox.setEditable(false);
         offerBox.setMaxLength(400);
         addRenderableWidget(offerBox);
-        addRenderableWidget(Button.builder(Component.literal("Copy"), b -> {
+        addRenderableWidget(Button.builder(Component.literal(Messages.t("ui.copy")), b -> {
             P2PHost h = P2PState.host();
             if (h != null && !h.offerCode().isEmpty()) {
                 this.minecraft.keyboardHandler.setClipboard(h.offerCode());
-                setFeedback("Invite code copied.");
+                setFeedback(Messages.t("ui.copied"));
             }
         }).bounds(x + WIDTH - 66, y, 66, 20).build());
         y += 24;
@@ -63,18 +65,18 @@ public final class HostScreen extends Screen {
             y += 11;
         }
         y += 6;
-        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, "2) Only if auto-connect fails: friend's answer code:"));
+        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, Messages.t("ui.step2")));
         y += 14;
-        answerBox = new EditBox(this.font, x, y, WIDTH - 70, 20, Component.literal("Answer code"));
+        answerBox = new EditBox(this.font, x, y, WIDTH - 70, 20, Component.literal(Messages.t("ui.answerCode")));
         answerBox.setMaxLength(400);
         addRenderableWidget(answerBox);
-        addRenderableWidget(Button.builder(Component.literal("Accept"), b -> acceptAnswer())
+        addRenderableWidget(Button.builder(Component.literal(Messages.t("ui.accept")), b -> acceptAnswer())
                 .bounds(x + WIDTH - 66, y, 66, 20).build());
         y += 24;
         feedback = Widgets.label(this.font, x, y, WIDTH, feedbackText);
         addRenderableWidget(feedback);
         y += 18;
-        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, "Friends:"));
+        addRenderableWidget(Widgets.label(this.font, x, y, WIDTH, Messages.t("ui.friends")));
         y += 12;
         for (int i = 0; i < PEER_LINES; i++) {
             peerLines[i] = Widgets.label(this.font, x, y, WIDTH, "");
@@ -86,21 +88,20 @@ public final class HostScreen extends Screen {
         addRenderableWidget(portNote);
 
         int bottom = this.height - 28;
-        addRenderableWidget(Button.builder(Component.literal("Stop hosting"), b -> {
+        addRenderableWidget(Button.builder(Component.literal(Messages.t("ui.stop")), b -> {
             P2PState.stopHosting();
             this.minecraft.setScreen(parent);
         }).bounds(x, bottom, 110, 20).build());
         addRenderableWidget(Button.builder(licenceLabel(), this::toggleLicence)
-                .tooltip(Tooltip.create(Component.literal("ON: only players with a licensed account can join. "
-                        + "OFF: offline/cracked launchers can join too (names are not verified, keep the invite code private).")))
+                .tooltip(Tooltip.create(Component.literal(Messages.t("ui.licenceTip"))))
                 .bounds(x + 114, bottom, 118, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose())
+        addRenderableWidget(Button.builder(Component.literal(Messages.t("ui.done")), b -> onClose())
                 .bounds(x + 236, bottom, 104, 20).build());
         setInitialFocus(answerBox);
     }
 
     private static Component licenceLabel() {
-        return Component.literal(ModConfig.current().onlineMode ? "Licence check: ON" : "Licence check: OFF");
+        return Component.literal(ModConfig.current().onlineMode ? Messages.t("ui.licenceOn") : Messages.t("ui.licenceOff"));
     }
 
     /** Switches the licence (online-mode) check for joining friends, immediately and for next time. */
@@ -113,20 +114,19 @@ public final class HostScreen extends Screen {
             server.setUsesAuthentication(on);
         }
         button.setMessage(licenceLabel());
-        setFeedback(on ? "Licence check ON: only licensed accounts can join (applies to new connections)."
-                : "Licence check OFF: offline launchers can join too. Keep your invite code private.");
+        setFeedback(on ? Messages.t("ui.licenceNowOn") : Messages.t("ui.licenceNowOff"));
     }
 
     private void acceptAnswer() {
         P2PHost h = P2PState.host();
         if (h == null) {
-            setFeedback("Hosting is not ready yet.");
+            setFeedback(Messages.t("ui.notReady"));
             return;
         }
         try {
             P2PHost.Peer peer = h.acceptAnswer(answerBox.getValue());
             answerBox.setValue("");
-            setFeedback("Answer accepted - connecting to friend " + peer.id() + "...");
+            setFeedback(Messages.t("ui.accepted", peer.id()));
         } catch (InviteException e) {
             setFeedback(e.getMessage());
         }
@@ -145,7 +145,7 @@ public final class HostScreen extends Screen {
         P2PHost h = P2PState.host();
         if (h == null) {
             Widgets.setIfChanged(offerBox, "");
-            fillLines(reportLines, Widgets.wrap(P2PState.hostMessage().isEmpty() ? "Starting..." : P2PState.hostMessage(), 60));
+            fillLines(reportLines, Widgets.wrap(P2PState.hostMessage().isEmpty() ? Messages.t("ui.starting") : P2PState.hostMessage(), 60));
             fillLines(peerLines, List.of());
             Widgets.setIfChanged(portNote, "");
             return;
@@ -166,7 +166,7 @@ public final class HostScreen extends Screen {
             }
         }
         fillLines(peerLines, List.of(lines));
-        Widgets.setIfChanged(portNote, "World port on this PC: " + h.minecraftPort() + " (also usable as the target of a tunnel service).");
+        Widgets.setIfChanged(portNote, Messages.t("ui.worldPort", h.minecraftPort()));
     }
 
     private static void fillLines(EditBox[] boxes, List<String> lines) {
