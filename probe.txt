@@ -1,0 +1,136 @@
+jar: /home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.3_server.jar
+=== net.minecraft.client.Minecraft (Screen|singleplayer|IntegratedServer|keyboard|Clipboard)
+=== net.minecraft.client.gui.screens.Screen (minecraft|init|addRenderableWidget|font|width|height|onClose|tick|setInitialFocus)
+Error: class not found: net.minecraft.client.gui.screens.Screen
+=== net.minecraft.client.gui.screens.PauseScreen (init|createPauseMenu)
+=== net.minecraft.client.gui.screens.TitleScreen (init|createNormalMenuOptions)
+=== net.minecraft.client.gui.screens.ConnectScreen (startConnecting)
+=== net.minecraft.client.server.IntegratedServer (publishServer|isPublished|getPort)
+=== net.minecraft.util.HttpUtil (getAvailablePort)
+=== net.minecraft.client.KeyboardHandler (lipboard)
+=== classes mentioning Gui
+=== 26.2 scope enum
+Compiled from "MinecraftServer.java"
+public final class net.minecraft.server.MinecraftServer$MultiplayerScope extends java.lang.Enum<net.minecraft.server.MinecraftServer$MultiplayerScope> {
+  public static final net.minecraft.server.MinecraftServer$MultiplayerScope OFF;
+  public static final net.minecraft.server.MinecraftServer$MultiplayerScope LAN;
+  private final net.minecraft.network.chat.Component translatable;
+  private final net.minecraft.network.chat.Component tooltip;
+  private static final net.minecraft.server.MinecraftServer$MultiplayerScope[] $VALUES;
+  public static net.minecraft.server.MinecraftServer$MultiplayerScope[] values();
+  public static net.minecraft.server.MinecraftServer$MultiplayerScope valueOf(java.lang.String);
+  private net.minecraft.server.MinecraftServer$MultiplayerScope(java.lang.String);
+  public net.minecraft.network.chat.Component getDisplayName();
+  public net.minecraft.network.chat.Component getTooltip();
+  private static net.minecraft.server.MinecraftServer$MultiplayerScope[] $values();
+  static {};
+}
+  public boolean publishServer(net.minecraft.server.MinecraftServer$MultiplayerScope, net.minecraft.world.level.GameType, boolean, int);
+  public boolean publishServer(net.minecraft.server.MinecraftServer$MultiplayerScope, int);
+  public boolean unpublishServer();
+=== authentication probe
+--- /home/runner/.gradle/caches/fabric-loom/26.2/minecraft-extracted_server.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/fabric-loom/26.2/minecraft-merged.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/fabric-loom/26.2/minecraft-server.jar
+--- /home/runner/.gradle/caches/fabric-loom/26.2/minecraft-client.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged/1.21.1-loom.mappings.1_21_1.layered+hash.1992839665-v2/minecraft-merged-1.21.1-loom.mappings.1_21_1.layered+hash.1992839665-v2.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged/1.21.4-loom.mappings.1_21_4.layered+hash.1465119081-v2/minecraft-merged-1.21.4-loom.mappings.1_21_4.layered+hash.1465119081-v2.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.2/minecraft-merged-deobf-26.2.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.3/minecraft-merged-deobf-26.3.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.1.2/minecraft-merged-deobf-26.1.2.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-intermediary/1.21.1-loom.mappings.1_21_1.layered+hash.1992839665-v2/minecraft-merged-intermediary-1.21.1-loom.mappings.1_21_1.layered+hash.1992839665-v2.jar
+--- /home/runner/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-intermediary/1.21.4-loom.mappings.1_21_4.layered+hash.1465119081-v2/minecraft-merged-intermediary-1.21.4-loom.mappings.1_21_4.layered+hash.1465119081-v2.jar
+--- /home/runner/.gradle/caches/fabric-loom/26.3/minecraft-extracted_server.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/fabric-loom/26.3/minecraft-merged.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/fabric-loom/26.3/minecraft-server.jar
+--- /home/runner/.gradle/caches/fabric-loom/26.3/minecraft-client.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/fabric-loom/1.21.4/minecraft-extracted_server.jar
+--- /home/runner/.gradle/caches/fabric-loom/1.21.4/minecraft-merged.jar
+--- /home/runner/.gradle/caches/fabric-loom/1.21.4/minecraft-server.jar
+--- /home/runner/.gradle/caches/fabric-loom/1.21.4/minecraft-client.jar
+--- /home/runner/.gradle/caches/fabric-loom/26.1.2/minecraft-extracted_server.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/fabric-loom/26.1.2/minecraft-merged.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/fabric-loom/26.1.2/minecraft-server.jar
+--- /home/runner/.gradle/caches/fabric-loom/26.1.2/minecraft-client.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/fabric-loom/1.21.1/minecraft-extracted_server.jar
+--- /home/runner/.gradle/caches/fabric-loom/1.21.1/minecraft-merged.jar
+--- /home/runner/.gradle/caches/fabric-loom/1.21.1/minecraft-server.jar
+--- /home/runner/.gradle/caches/fabric-loom/1.21.1/minecraft-client.jar
+--- /home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.3_server.jar
+--- /home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.3_client.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.2_server.jar
+--- /home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_1.21.1_client.jar
+--- /home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.2_client.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_1.21.4_server.jar
+--- /home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.1.2_client.jar
+net.minecraft.server.MinecraftServer:   private boolean onlineMode;
+net.minecraft.server.MinecraftServer:   public boolean usesAuthentication();
+net.minecraft.server.MinecraftServer:   public void setUsesAuthentication(boolean);
+--- /home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_1.21.4_client.jar
+--- /home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_1.21.1_server.jar
+--- /home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.1.2_server.jar
+public abstract class net.minecraft.client.gui.screens.Screen extends net.minecraft.client.gui.components.events.AbstractContainerEventHandler implements net.minecraft.client.gui.components.Renderable {
+  private final java.util.List<net.minecraft.client.gui.components.Renderable> renderables;
+  public final void extractRenderStateWithTooltipAndSubtitles(net.minecraft.client.gui.GuiGraphicsExtractor, int, int, float);
+  public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor, int, int, float);
+  protected <T extends net.minecraft.client.gui.components.events.GuiEventListener & net.minecraft.client.gui.components.Renderable & net.minecraft.client.gui.narration.NarratableEntry> T addRenderableWidget(T);
+  protected <T extends net.minecraft.client.gui.components.Renderable> T addRenderableOnly(T);
+  public void extractBackground(net.minecraft.client.gui.GuiGraphicsExtractor, int, int, float);
+  protected void extractBlurredBackground(net.minecraft.client.gui.GuiGraphicsExtractor);
+  protected void extractPanorama(net.minecraft.client.gui.GuiGraphicsExtractor, float);
+  protected void extractMenuBackground(net.minecraft.client.gui.GuiGraphicsExtractor);
+  protected void extractMenuBackground(net.minecraft.client.gui.GuiGraphicsExtractor, int, int, int, int);
+  public static void extractMenuBackgroundTexture(net.minecraft.client.gui.GuiGraphicsExtractor, net.minecraft.resources.Identifier, int, int, float, float, int, int);
+  public void extractTransparentBackground(net.minecraft.client.gui.GuiGraphicsExtractor);
+--- net.minecraft.client.gui.GuiGraphicsExtractor
+  public void fill(int, int, int, int, int);
+  public void fill(com.mojang.blaze3d.pipeline.RenderPipeline, int, int, int, int, int);
+  public void fill(com.mojang.blaze3d.pipeline.RenderPipeline, net.minecraft.client.gui.render.TextureSetup, int, int, int, int);

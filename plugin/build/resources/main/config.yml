@@ -1,0 +1,36 @@
+# Start P2P hosting when the server starts and print the invite code in the console.
+# Otherwise run /p2p invite when you want to invite friends.
+auto-start: false
+
+# Friends who have the invite code connect by themselves (no /p2p accept needed). Anyone holding the code can join,
+# so treat it like a password. Set to false to approve each friend with /p2p accept <answer code>.
+auto-accept: true
+
+# Ask the router (UPnP) to open the UDP port so friends can connect even behind a strict NAT. Harmless without UPnP.
+upnp: true
+
+# Language of messages shown to players/console: en or ru
+language: en
+
+# Discord announcement: "server is online + invite code". The webhook URL is a SECRET (anyone with it can post in the
+# channel) and the code works like a password, so use a private channel. Create it in Discord: channel settings,
+# Integrations, Webhooks, New Webhook, Copy Webhook URL. /p2p announce posts the code again.
+discord:
+  enabled: false
+  webhook-url: ""
+  username: "P2P Minecraft"
+  server-name: "My Minecraft server"
+  # e.g. "@everyone" or "<@&ROLE_ID>"; empty = no ping
+  mention: ""
+  # Placeholders: {name} and {code}
+  message-start: "{name} is online! Open Minecraft, click \"P2P: Join\" on the title screen and paste this invite code:\n```{code}```"
+  notify-stop: false
+  message-stop: "{name} is now offline."
+
+# Public STUN servers used only to learn this machine's public UDP address. Game traffic never goes through them.
+# Leave the list empty to use the built-in defaults.
+stun-servers: []
+
+# NOTE: friends reach the server through 127.0.0.1, so they all appear with the same IP.
+#  - In bukkit.yml set "connection-throttle: 0" (otherwise two friends joining within 4 seconds are refused).
+#  - Leave "server-ip" empty in server.properties.

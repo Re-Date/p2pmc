@@ -1,0 +1,24 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "MIT"
+
+[[mods]]
+modId = "p2pmc"
+version = "1.0.0+mc26.3"
+displayName = "P2P Minecraft"
+authors = "ReDate, Claude"
+description = "Host your world for friends without a public IP or VPS: direct encrypted peer-to-peer connection."
+
+[[dependencies.p2pmc]]
+modId = "neoforge"
+type = "required"
+versionRange = "[26.1,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.p2pmc]]
+modId = "minecraft"
+type = "required"
+versionRange = "[26.3,26.4)"
+ordering = "NONE"
+side = "CLIENT"

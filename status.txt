@@ -1,0 +1,18 @@
+mod=success run=21
+neoforge=success
+PLUGIN-paper-1.21.x-server ok
+PLUGIN-paper-26.1.2-server ok
+PLUGIN-paper-26.2-server ok
+MOD-fabric-26.1.2-client ok
+MOD-fabric-26.2-client ok
+MOD-fabric-1.21.1-client ok
+MOD-fabric-1.21.4-client ok
+NeoForge for 1.21.4: 21.4.161
+MOD-neoforge-1.21.4-client ok
+ModDevGradle: 2.0.148
+NeoForge for 26.1.2: 26.1.2.126
+MOD-neoforge-26.1.2-client ok
+NeoForge for 26.2: 26.2.0.93
+MOD-neoforge-26.2-client ok
+NeoForge for 26.3: 26.3.0.101
+MOD-neoforge-26.3-client ok

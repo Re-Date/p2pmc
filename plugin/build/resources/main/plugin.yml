@@ -1,0 +1,15 @@
+name: P2PMinecraft
+version: '1.0.0'
+main: dev.p2pmc.paper.P2PPlugin
+api-version: '26.2'
+description: "P2P: Invite friends - host this server for friends over a direct encrypted peer-to-peer tunnel (no public IP, no VPS)."
+authors: [ReDate, Claude]
+commands:
+  p2p:
+    description: P2P hosting - invite, accept, status, stop
+    usage: /<command> <invite|accept|status|announce|stop>
+    permission: p2p.admin
+permissions:
+  p2p.admin:
+    description: Manage P2P hosting
+    default: op

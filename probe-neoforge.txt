@@ -1,0 +1,20 @@
+/home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.3_server.jar
+/home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.3_client.jar
+/home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.2_server.jar
+/home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_1.21.1_client.jar
+/home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.2_client.jar
+/home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_1.21.4_server.jar
+/home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.1.2_client.jar
+/home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_1.21.4_client.jar
+/home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_1.21.1_server.jar
+/home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.1.2_server.jar
+=== net.neoforged.neoforge.client.event.ScreenEvent$Init$Post in /home/runner/.gradle/caches/neoformruntime/intermediate_results/compiledWithNeoForge_5c566c99ad36719f8749941f282de5e214bda895_output.jar
+=== net.neoforged.neoforge.client.event.ScreenEvent$Init in /home/runner/.gradle/caches/neoformruntime/intermediate_results/compiledWithNeoForge_5c566c99ad36719f8749941f282de5e214bda895_output.jar
+  public void addListener(net.minecraft.client.gui.components.events.GuiEventListener);
+=== net.minecraft.client.gui.screens.ConnectScreen in /home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.3_client.jar
+  public static void startConnecting(net.minecraft.client.gui.screens.Screen, net.minecraft.client.Minecraft, net.minecraft.client.multiplayer.resolver.ServerAddress, net.minecraft.client.multiplayer.ServerData, boolean, net.minecraft.client.multiplayer.TransferState);
+=== net.minecraft.client.Minecraft in /home/runner/.gradle/caches/neoformruntime/artifacts/minecraft_26.3_client.jar
+  private net.minecraft.client.server.IntegratedServer singleplayerServer;
+  public void setScreenAndShow(net.minecraft.client.gui.screens.Screen);
+  public boolean hasSingleplayerServer();
+  public net.minecraft.client.server.IntegratedServer getSingleplayerServer();
