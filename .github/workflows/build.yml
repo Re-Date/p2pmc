@@ -59,6 +59,8 @@ jobs:
           MAIN_MOD="$(ls mod/build/libs/*.jar 2>/dev/null | grep -v -- '-sources' | head -1 || true)"
           MAIN_NEO="$(ls neoforge/build/libs/*.jar 2>/dev/null | grep -v -- '-sources' | head -1 || true)"
           if [ -n "$MAIN_MOD" ]; then cp "$MAIN_MOD" "release/MOD-fabric-26.3-client-build$N.jar"; fi
+          MAIN_PLUGIN="$(ls plugin/build/libs/*.jar 2>/dev/null | head -1 || true)"
+          if [ -n "$MAIN_PLUGIN" ]; then cp "$MAIN_PLUGIN" "release/PLUGIN-paper-26.3-server-build$N.jar"; fi
           if [ -n "$MAIN_NEO" ]; then cp "$MAIN_NEO" "release/MOD-neoforge-1.21.1-client-build$N.jar"; fi
           build() { # name  jar-glob-dir  gradle-args...
             local name="$1" dir="$2"; shift 2
@@ -71,6 +73,9 @@ jobs:
               tail -n 120 "variants/$name.log" > "variants/$name.tail"
             fi
           }
+          build PLUGIN-paper-1.21.x-server plugin -p plugin -Ppaper_version=1.21.1-R0.1-SNAPSHOT -Pjava_release=21 -Papi_version=1.21
+          build PLUGIN-paper-26.1.2-server plugin -p plugin -Ppaper_version=26.1.2.build.+ -Papi_version=26.1.2
+          build PLUGIN-paper-26.2-server plugin -p plugin -Ppaper_version=26.2.build.+ -Papi_version=26.2
           build MOD-fabric-26.1.2-client mod -p mod -Pminecraft_version=26.1.2 '-PmcRange=~26.1.2'
           build MOD-fabric-26.2-client mod -p mod -Pminecraft_version=26.2 '-PmcRange=~26.2'
           build MOD-fabric-1.21.1-client fabric-legacy -p fabric-legacy -Pmc=1.21.1 '-PmcRange=~1.21.1'
@@ -105,9 +110,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           N="${{ github.run_number }}"
-          PLUGIN="$(ls plugin/build/libs/*.jar 2>/dev/null | head -1 || true)"
           mkdir -p release
-          if [ -n "$PLUGIN" ]; then cp "$PLUGIN" "release/PLUGIN-paper-server-build$N.jar"; fi
           ARGS=()
           NOTES="Build $N"$'\n'
           for f in release/*.jar; do

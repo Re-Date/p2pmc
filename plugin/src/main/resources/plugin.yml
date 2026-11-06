@@ -1,7 +1,7 @@
 name: P2PMinecraft
 version: '${version}'
 main: dev.p2pmc.paper.P2PPlugin
-api-version: '26.3'
+api-version: '${api_version}'
 description: "P2P: Invite friends - host this server for friends over a direct encrypted peer-to-peer tunnel (no public IP, no VPS)."
 authors: [ReDate, Claude]
 commands:

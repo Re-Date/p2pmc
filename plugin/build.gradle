@@ -26,21 +26,17 @@ sourceSets {
     }
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
-    }
-}
-
 tasks.withType(JavaCompile).configureEach {
-    options.release = 25
+    // 1.21.x servers run Java 21, 26.x servers Java 25
+    options.release = project.java_release.toInteger()
     options.encoding = 'UTF-8'
 }
 
 processResources {
     inputs.property 'version', project.version
+    inputs.property 'api_version', project.api_version
     filesMatching('plugin.yml') {
-        expand 'version': inputs.properties.version
+        expand 'version': project.version, 'api_version': project.api_version
     }
 }
 
